@@ -151,24 +151,27 @@
 
                 <div class="divider">ACCEDER CON</div>
 
-                
 
-                    <div class="social-login">
-                        <a href="javascript:void(0)" class="btn-social" onclick="abrirModalQR()">
-                            <i class="fa-solid fa-qrcode"></i>
-                            <span>CONTINUAR CON QR</span>
-                        </a>
 
-                        <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
-                        <div id="g_id_onload"
-                            data-client_id="382398764900-6otetq3jppn56hgb7ugc2amuctudt89a.apps.googleusercontent.com"
-                            data-context="signin" data-ux_mode="redirect" data-login_uri="" data-auto_prompt="false">
-                        </div>
+                <div class="social-login">
+                    <a href="javascript:void(0)" class="btn-social" onclick="abrirModalQR()">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>CONTINUAR CON QR</span>
+                    </a>
 
-                        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
-                            data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="340">
-                        </div>
+                    <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
+                    <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
+                    <div id="g_id_onload"
+                        data-client_id="382398764900-6otetq3jppn56hgb7ugc2amuctudt89a.apps.googleusercontent.com"
+                        data-context="signin" data-ux_mode="redirect"
+                        data-login_uri="{{ request.scheme }}://{{ request.get_host }}{% url 'google_login' %}"
+                        data-auto_prompt="false">
                     </div>
+
+                    <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+                        data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="340">
+                    </div>
+                </div>
 
                 <p class="terms">
                     Al continuar aceptas la <a href="#">Política de privacidad</a> y los <a href="#">Términos de
@@ -205,14 +208,6 @@
             </p>
         </div>
     </div>
-
-    <script>
-    document.getElementById('g_id_onload').setAttribute(
-        'data-login_uri',
-        window.location.origin + "{% url 'google_login' %}"
-    );
-
-    </script>
 
 </body>
 
