@@ -423,31 +423,41 @@ def pagina_escaneo_qr(request, token):
     })
 
 
+@csrf_exempt
 def aprobar_login_qr(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        token_qr = data.get('token_qr')
-        google_jwt = data.get('google_jwt')
+        es_json = 'application/json' in (request.content_type or '')
+        if es_json:
+            data = json.loads(request.body)
+            token_qr = data.get('token_qr')
+            google_jwt = data.get('google_jwt')
+        else:
+            token_qr = request.GET.get('token_qr') or request.POST.get('token_qr')
+            google_jwt = request.POST.get('credential')
 
         try:
-            idinfo = id_token.verify_oauth2_token(google_jwt, requests.Request(), GOOGLE_CLIENT_ID)
+            idinfo = id_token.verify_oauth2_token(
+                google_jwt,
+                requests.Request(),
+                GOOGLE_CLIENT_ID,
+                clock_skew_in_seconds=10
+            )
 
-            email = idinfo.get('email')
-            nombre = idinfo.get('given_name', '')
+            email = (idinfo.get('email') or '').strip().lower()
+            nombre = idinfo.get('given_name', '') or idinfo.get('name', '')
             apellidos = idinfo.get('family_name', '')
 
             usuario = db.usuarios.find_one({'email': email})
 
             if not usuario:
-                usuario_data = {
+                db.usuarios.insert_one({
                     'email': email,
-                    'nombre': nombre,
+                    'nombre': nombre or 'Usuario',
                     'apellidos': apellidos,
                     'rol': 'cliente',
                     'metodo_registro': 'qr_google',
                     'fecha_registro': datetime.utcnow()
-                }
-                db.usuarios.insert_one(usuario_data)
+                })
 
             db.tokens_qr.update_one(
                 {'token': token_qr},
@@ -455,18 +465,24 @@ def aprobar_login_qr(request):
                     'estado': 'aprobado',
                     'usuario': {
                         'email': email,
-                        'nombre': nombre,
+                        'nombre': nombre or 'Usuario',
                         'apellidos': apellidos
                     }
                 }}
             )
 
-            return JsonResponse({'status': 'ok'})
+            if es_json:
+                return JsonResponse({'status': 'ok'})
+            return render(request, 'scan_mobile.html', {
+                'exito': f'¡Listo, {nombre or email}! Ya iniciaste sesión en tu computadora.'
+            })
 
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            if es_json:
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            return render(request, 'scan_mobile.html', {'error': 'No se pudo validar tu cuenta de Google. Intenta escanear un QR nuevo.'})
 
-    return JsonResponse({'status': 'invalid_method'}, status=405)
+    return redirect('login')
 
 
 # ==============================================================================

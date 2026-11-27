@@ -30,9 +30,8 @@
         h1 { font-size: 20px; letter-spacing: 0.5px; margin-bottom: 10px; }
         p { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 24px; }
         .google-wrap { display: flex; justify-content: center; margin: 16px 0; }
-        .status-msg { margin-top: 18px; font-size: 14px; font-weight: 600; }
-        .status-ok { color: #15803d; }
-        .status-err { color: #dc2626; }
+        .status-ok { color: #15803d; font-weight: 600; }
+        .status-err { color: #dc2626; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -42,16 +41,20 @@
         {% if error %}
             <h1>Código QR no válido</h1>
             <p class="status-err">{{ error }}</p>
-            <p>Genera un nuevo código QR desde la pantalla de inicio de sesión en tu computadora.</p>
+            <p>Genera un nuevo código QR desde tu computadora.</p>
+        {% elif exito %}
+            <h1>¡ACCESO AUTORIZADO!</h1>
+            <p class="status-ok">{{ exito }}</p>
+            <p>Ya puedes cerrar esta pestaña en tu teléfono.</p>
         {% else %}
             <h1>INICIAR SESIÓN EN PC</h1>
             <p>Confirma tu identidad con tu cuenta de Google para abrir tu sesión automáticamente en el navegador.</p>
 
-            {% csrf_token %}
-
             <div id="g_id_onload"
                  data-client_id="{{ google_client_id }}"
-                 data-callback="handleCredentialResponse"
+                 data-context="signin"
+                 data-ux_mode="redirect"
+                 data-login_uri="{{ request.scheme }}://{{ request.get_host }}{% url 'aprobar_login_qr' %}?token_qr={{ token }}"
                  data-auto_prompt="false">
             </div>
 
@@ -65,50 +68,7 @@
                      data-logo_alignment="center">
                 </div>
             </div>
-
-            <div id="status" class="status-msg"></div>
         {% endif %}
     </div>
-
-    {% if not error %}
-    <script>
-        function getCSRFToken() {
-            const input = document.querySelector('[name=csrfmiddlewaretoken]');
-            return input ? input.value : '';
-        }
-
-        function handleCredentialResponse(response) {
-            const statusEl = document.getElementById('status');
-            statusEl.className = 'status-msg';
-            statusEl.textContent = 'Autorizando acceso en tu computadora...';
-
-            fetch("{% url 'aprobar_login_qr' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: JSON.stringify({
-                    token_qr: "{{ token }}",
-                    google_jwt: response.credential
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "ok") {
-                    statusEl.className = 'status-msg status-ok';
-                    statusEl.textContent = '¡Listo! Ya iniciaste sesión en tu computadora. Puedes cerrar esta pestaña.';
-                } else {
-                    statusEl.className = 'status-msg status-err';
-                    statusEl.textContent = 'Error: ' + (data.message || 'No se pudo autorizar el acceso.');
-                }
-            })
-            .catch(() => {
-                statusEl.className = 'status-msg status-err';
-                statusEl.textContent = 'Error de conexión con el servidor. Intenta de nuevo.';
-            });
-        }
-    </script>
-    {% endif %}
 </body>
 </html>
