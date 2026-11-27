@@ -5,13 +5,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <meta name="supported-color-schemes" content="light">
     <title>
         {% if paso == 2 %}Verificar código
         {% elif paso == 3 %}Completa tu registro
         {% else %}Crear cuenta o Iniciar sesión{% endif %}
     </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=11">
     <script src="{% static 'js/login.js' %}?v=6" defer></script>
     <script src="https://accounts.google.com/gsi/client" defer></script>
 </head>
@@ -140,7 +142,7 @@
                             <input type="checkbox" name="acepta_terminos" id="acepta_terminos" value="1">
                             <span>Acepto la <a href="{% url 'politica_privacidad' %}"><strong>Política de
                                         privacidad</strong></a> y los <a href="{% url 'politica_de_uso' %}"
-                                    target="_blank"><strong>Términos de uso</a> de Vértice.</strong></span>
+                                    target="_blank"><strong>Términos de uso</strong></a> de Vértice.</span>
                         </label>
                         <small class="field-error" id="error-terminos"
                             style="display:none; color: #e02424; font-size: 11px; margin-top: 5px; font-weight: 600;"></small>
@@ -151,15 +153,12 @@
 
                 <div class="divider">ACCEDER CON</div>
 
-
-
                 <div class="social-login">
                     <a href="javascript:void(0)" class="btn-social" onclick="abrirModalQR()">
                         <i class="fa-solid fa-qrcode"></i>
                         <span>CONTINUAR CON QR</span>
                     </a>
 
-                    <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
                     <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
                     <div id="g_id_onload"
                         data-client_id="382398764900-6otetq3jppn56hgb7ugc2amuctudt89a.apps.googleusercontent.com"
@@ -169,12 +168,12 @@
                     </div>
 
                     <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
-                        data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="400">
+                        data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="320">
                     </div>
                 </div>
 
                 <p class="terms">
-                    Al continuar aceptas la <a href="#">Política de privacidad</a> y los <a href="#">Términos de
+                    Al continuar aceptas la <a href="{% url 'politica_privacidad' %}">Política de privacidad</a> y los <a href="{% url 'politica_de_uso' %}">Términos de
                         uso</a>.
                 </p>
                 {% endif %}
