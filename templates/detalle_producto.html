@@ -1,0 +1,631 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ producto.nombre }} | VÉRTICE</title>
+
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=10">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=18">
+    <link rel="stylesheet" href="{% static 'css/detalle_producto.css' %}?v=9">
+
+    <script src="{% static 'js/global.js' %}?v=9" defer></script>
+    <script src="{% static 'js/acciones.js' %}?v=6" defer></script>
+    <script src="{% static 'js/probador_virtual.js' %}?v=9" defer></script>
+
+    <!-- IA de Detección Corporal (MediaPipe Pose) -->
+  
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Navegador Principal -->
+    <header class="menuprincipal">
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo Vértice" class="logo">
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper" style="text-decoration: none; color: inherit; display: flex; align-items: center; margin-right: 15px;" title="Ver Carrito y Pagar">
+                <ion-icon name="bag-handle-outline" class="icono-bag" style="font-size: 24px; color: #000;"></ion-icon>
+            </a>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion" style="text-decoration: none; color: inherit;">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Overlay y Menús Laterales -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+        {% if request.session.usuario_nombre %}
+            {% if request.session.usuario_rol == 'admin' or request.session.usuario_rol == 'superadmin' %}
+            <a href="{% url 'admin_dashboard' %}" style="font-weight: 700; color: #000; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 5px;">PANEL DE ADMINISTRACIÓN</a>
+            {% endif %}
+            <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+            <a href="{% url 'logout' %}" style="color: #d9534f;">CERRAR SESIÓN</a>
+        {% else %}
+            <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+            <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Sección Detalle del Producto -->
+    <main class="detalle-pagina-container">
+
+        <a href="javascript:history.back()" class="btn-volver-atras">
+            <ion-icon name="arrow-back-outline"></ion-icon> VOLVER
+        </a>
+
+        <div class="detalle-grid">
+
+            <!-- Columna Izquierda: Imagen de Prenda -->
+            <div class="detalle-col-imagen">
+                <div class="imagen-wrapper-detalle">
+                    <img src="{{ producto.imagen_url|default:producto.imagen }}"
+                         data-fallback="{% static 'media/logo1.png' %}"
+                         onerror="this.onerror=null; this.src=this.dataset.fallback;"
+                         alt="{{ producto.nombre }}">
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Información y Controles -->
+            <div class="detalle-col-info">
+
+                <div class="detalle-header-top">
+                    <span class="categoria-badge">{{ producto.categoria|default:"Colección Vértice"|upper }}</span>
+
+                    <button type="button"
+                            id="btnFavoritoDetalle"
+                            class="btn-favorito-detalle {% if es_favorito %}activo active{% endif %}"
+                            data-producto-id="{{ producto.id_str }}"
+                            title="{% if es_favorito %}Quitar de favoritos{% else %}Guardar en favoritos{% endif %}"
+                            onclick="toggleFavoritoGlobal(this)">
+                        <ion-icon name="{% if es_favorito %}heart{% else %}heart-outline{% endif %}" {% if es_favorito %}style="color: #e11d48;"{% endif %}></ion-icon>
+                    </button>
+                </div>
+
+                <h1 class="titulo-detalle">{{ producto.nombre }}</h1>
+
+                <div class="precios-detalle">
+                    <span class="precio-actual-detalle">${{ producto.precio }} MXN</span>
+                    {% if producto.precio_original %}
+                    <span class="precio-original-detalle">${{ producto.precio_original }} MXN</span>
+                    {% endif %}
+                </div>
+
+                <!-- Indicador dinámico de disponibilidad -->
+                <div id="indicadorStockDetalle" class="stock-status-pill {% if producto.agotado %}agotado{% elif stock_inicial <= 5 %}bajo{% endif %}">
+                    {% if producto.agotado %}
+                        <ion-icon name="close-circle-outline"></ion-icon> PRENDA AGOTADA TEMPORALMENTE
+                    {% elif stock_inicial <= 5 %}
+                        <ion-icon name="alert-circle-outline"></ion-icon> ¡ÚLTIMAS {{ stock_inicial }} UNIDADES DISPONIBLES!
+                    {% else %}
+                        <ion-icon name="checkmark-circle-outline"></ion-icon> EN STOCK ({{ stock_inicial }} DISPONIBLES)
+                    {% endif %}
+                </div>
+
+                <p class="descripcion-detalle">
+                    {{ producto.descripcion|default:"Prenda diseñada con textiles premium. Corte contemporáneo de alta durabilidad para tu estilo diario." }}
+                </p>
+
+                <!-- Formulario de Selección -->
+                <form action="{% url 'agregar_al_carrito' %}" method="POST" data-ajax-cart="true" class="form-producto-detalle">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id_str }}">
+
+                    <!-- Selector de Tallas con Stock Individual -->
+                    {% if tallas_detalle %}
+                    <div class="bloque-opciones">
+                        <label class="label-opcion">SELECCIONA TU TALLA:</label>
+                        <div class="grid-tallas">
+                            {% for item in tallas_detalle %}
+                            <label class="talla-pill {% if item.agotada %}agotada{% endif %}" title="{% if item.agotada %}Talla agotada{% elif item.stock != None %}{{ item.stock }} disponibles{% endif %}">
+                                <input type="radio"
+                                       name="talla"
+                                       value="{{ item.nombre }}"
+                                       data-stock="{% if item.stock != None %}{{ item.stock }}{% else %}10{% endif %}"
+                                       {% if item.agotada %}disabled{% endif %}
+                                       {% if item.nombre == talla_inicial and not item.agotada %}checked{% endif %}
+                                       onchange="actualizarLimitePorTalla(this)"
+                                       required>
+                                <span>{{ item.nombre }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cantidad -->
+                    <div class="bloque-opciones">
+                        <label for="cantidad_input" class="label-opcion">CANTIDAD:</label>
+                        <div class="selector-cantidad">
+                            <input type="number"
+                                   id="cantidad_input"
+                                   name="cantidad"
+                                   value="1"
+                                   min="1"
+                                   max="{% if stock_inicial > 0 %}{{ stock_inicial }}{% else %}1{% endif %}"
+                                   {% if producto.agotado %}disabled{% endif %}
+                                   class="input-cantidad">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnSubmitDetalle" class="btn-añadir-carrito" {% if producto.agotado %}disabled{% endif %}>
+                        <ion-icon name="bag-handle-outline"></ion-icon>
+                        {% if producto.agotado %}AGOTADO{% else %}AÑADIR AL CARRITO{% endif %}
+                    </button>
+                </form>
+
+                <button type="button" class="btn-probador-virtual" onclick="abrirProbadorVirtual()">
+                    <ion-icon name="scan-outline"></ion-icon> PROBARME ESTA PRENDA (VIRTUAL TRY-ON)
+                </button>
+
+                <p class="nota-envio-detalle">
+                    <ion-icon name="shield-checkmark-outline"></ion-icon> Envío seguro a todo México | Devoluciones sin costo.
+                </p>
+
+            </div>
+        </div>
+
+        <!-- ==================================================================
+             SECCIÓN: COMPLETA EL LOOK (DEBAJO DEL DETALLE PRINCIPAL)
+             ================================================================== -->
+        {% if look_sugerido %}
+        <section class="completa-look-box"
+                 id="completaLookSection"
+                 data-base-id="{{ producto.id_str }}"
+                 data-base-precio="{{ producto.precio }}"
+                 data-cart-url="{% url 'agregar_al_carrito' %}">
+
+            <div class="look-header">
+                <span class="look-badge">ESTILISTA VÉRTICE • -10% EN COMBO</span>
+                <h3 class="look-title">COMPLETA EL LOOK</h3>
+                <p class="look-subtitle">Combina esta prenda con nuestra selección editorial y obtén 10% de descuento al llevar el outfit completo.</p>
+            </div>
+
+            <div class="look-items-grid">
+                <!-- Prenda Principal (Actual) -->
+                <div class="look-item-card is-main">
+                    <img src="{{ producto.imagen_url|default:producto.imagen }}"
+                         data-fallback="{% static 'media/logo1.png' %}"
+                         onerror="this.onerror=null; this.src=this.dataset.fallback;"
+                         alt="{{ producto.nombre }}">
+                    <div class="look-item-info">
+                        <span class="look-tag">PRENDA ACTUAL</span>
+                        <h4>{{ producto.nombre }}</h4>
+                        <p class="look-price">${{ producto.precio }} MXN</p>
+                        <select class="look-size-select" id="lookSizeMain">
+                            {% if tallas_detalle %}
+                                {% for item in tallas_detalle %}
+                                    {% if not item.agotada %}
+                                    <option value="{{ item.nombre }}" {% if item.nombre == talla_inicial %}selected{% endif %}>Talla: {{ item.nombre }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <option value="Única">Talla: Única</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Prendas Complementarias -->
+                {% for item in look_sugerido %}
+                <div class="look-plus">+</div>
+                <div class="look-item-card look-extra-item" data-id="{{ item.id }}" data-precio="{{ item.precio }}">
+                    <label class="look-check-wrap">
+                        <input type="checkbox" class="look-checkbox" checked onchange="recalcularTotalLook()">
+                        <span>Incluir</span>
+                    </label>
+                    <a href="{% url 'detalle_producto' item.id %}">
+                        <img src="{{ item.imagen }}"
+                             data-fallback="{% static 'media/logo1.png' %}"
+                             onerror="this.onerror=null; this.src=this.dataset.fallback;"
+                             alt="{{ item.nombre }}">
+                    </a>
+                    <div class="look-item-info">
+                        <span class="look-tag">{{ item.subcategoria|default:"COMPLEMENTO" }}</span>
+                        <h4>{{ item.nombre }}</h4>
+                        <p class="look-price">${{ item.precio }} MXN</p>
+                        <select class="look-size-select">
+                            {% for talla in item.tallas %}
+                            <option value="{{ talla }}">Talla: {{ talla }}</option>
+                            {% empty %}
+                            <option value="M">Talla: M</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="look-footer-summary">
+                <div class="look-totals">
+                    <span class="look-old-total" id="lookPrecioOriginal">$0.00 MXN</span>
+                    <div class="look-final-row">
+                        <strong id="lookPrecioFinal">$0.00 MXN</strong>
+                        <span class="look-discount-pill" id="lookAhorroTag">AHORRAS 10%</span>
+                    </div>
+                </div>
+                <button type="button" id="btnAgregarLook" class="btn-agregar-look" onclick="agregarOutfitAlCarrito()">
+                    <ion-icon name="sparkles-outline"></ion-icon> AGREGAR OUTFIT AL CARRITO
+                </button>
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex, CP 54743</p>
+
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Correo"><ion-icon name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook" target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr" class="btn-footer instagram" target="_blank" rel="noopener noreferrer" title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- ======================================================================
+         MODAL: PROBADOR VIRTUAL VÉRTICE
+         ====================================================================== -->
+    <div id="vtoModal" class="vto-modal-overlay" data-producto-id="{{ producto.id_str }}" onclick="if(event.target === this) cerrarProbadorVirtual()">
+        <div class="vto-modal-card">
+            <div class="vto-modal-header">
+                <div class="vto-title-group">
+                    <span class="vto-badge">STUDIO AR</span>
+                    <h3>PROBADOR VIRTUAL • {{ producto.nombre|upper }}</h3>
+                </div>
+                <button type="button" class="vto-btn-close" onclick="cerrarProbadorVirtual()" title="Cerrar">
+                    <ion-icon name="close-outline"></ion-icon>
+                </button>
+            </div>
+
+            <div class="vto-modal-body">
+                <!-- Lienzo Interactivo -->
+                <div class="vto-stage-area" id="vtoStage">
+                    <div class="vto-placeholder" id="vtoPlaceholder">
+                        <ion-icon name="body-outline"></ion-icon>
+                        <h4>Sube tu foto o usa tu cámara</h4>
+                        <p>La IA detectará automáticamente tus hombros y torso para ajustar la prenda a tu talla.</p>
+                    </div>
+
+                    <div class="vto-webcam-wrap" id="vtoWebcamWrap">
+                        <video id="vtoVideo" autoplay playsinline></video>
+                        <button type="button" class="vto-btn-capturar" onclick="capturarFotoCamara()">
+                            <ion-icon name="camera"></ion-icon> TOMAR FOTO AHORA
+                        </button>
+                    </div>
+
+                    <canvas id="vtoCanvas"></canvas>
+                </div>
+
+                <!-- Panel de Controles Estudio Pro -->
+                <div class="vto-controls-area">
+                    <input type="file" id="vtoFileInput" accept="image/*" hidden onchange="cargarFotoUsuario(event)">
+
+                    <div class="vto-source-buttons">
+                        <button type="button" class="vto-btn-source" onclick="document.getElementById('vtoFileInput').click()">
+                            <ion-icon name="image-outline"></ion-icon> SUBIR FOTO
+                        </button>
+                        <button type="button" class="vto-btn-source" onclick="iniciarCamaraVTO()">
+                            <ion-icon name="videocam-outline"></ion-icon> USAR CÁMARA
+                        </button>
+                    </div>
+
+                    <!-- Selector de Modo de Herramienta -->
+                    <div class="vto-mode-tabs">
+                        <button type="button" class="vto-mode-btn active" data-mode="move" onclick="cambiarModoVTO('move', this)">
+                            <ion-icon name="move-outline"></ion-icon> AJUSTAR
+                        </button>
+                        <button type="button" class="vto-mode-btn" data-mode="erase" onclick="cambiarModoVTO('erase', this)">
+                            <ion-icon name="cut-outline"></ion-icon> BORRAR BORDE
+                        </button>
+                        <button type="button" class="vto-mode-btn" data-mode="restore" onclick="cambiarModoVTO('restore', this)">
+                            <ion-icon name="brush-outline"></ion-icon> RESTAURAR
+                        </button>
+                    </div>
+
+                    <!-- Controles del pincel (solo visibles en Borrar / Restaurar) -->
+                    <div class="vto-brush-panel" id="vtoBrushPanel" style="display:none;">
+                        <div class="vto-slider-header">
+                            <span>GROSOR DEL PINCEL</span>
+                            <span id="vtoBrushVal">22px</span>
+                        </div>
+                        <input type="range" id="vtoBrushSize" min="8" max="60" value="22" oninput="document.getElementById('vtoBrushVal').textContent = this.value + 'px'">
+                        <p class="vto-hint-text">Pasa el cursor sobre la prenda para limpiar bordes o recuperar tela recortada.</p>
+                    </div>
+
+                    <!-- Controles de ajuste geométrico (visibles en modo Ajustar) -->
+                    <div id="vtoTransformPanel">
+                        <div class="vto-quick-tools">
+                            <label class="vto-toggle-row">
+                                <span>Quitar fondo</span>
+                                <input type="checkbox" id="vtoAutoCutout" checked onchange="procesarPrendaVTO()">
+                            </label>
+                            <button type="button" class="vto-btn-mini" onclick="voltearPrendaVTO()" title="Voltear">
+                                <ion-icon name="swap-horizontal-outline"></ion-icon> ESPEJO
+                            </button>
+                            <button type="button" class="vto-btn-mini" onclick="ajustarPrendaAlCuerpoAutomatico()" title="Re-ajustar al cuerpo con IA">
+                                <ion-icon name="body-outline"></ion-icon> AUTO-FIT
+                            </button>
+                        </div>
+
+                        <div class="vto-slider-group">
+                            <div class="vto-slider-header">
+                                <span>TOLERANCIA DE RECORTE</span>
+                                <span id="vtoTolVal">22</span>
+                            </div>
+                            <input type="range" id="vtoTolerance" min="5" max="60" value="22" oninput="document.getElementById('vtoTolVal').textContent=this.value; procesarPrendaVTO()">
+                        </div>
+
+                        <div class="vto-slider-group">
+                            <div class="vto-slider-header">
+                                <span>SUAVIZADO DE BORDE (FEATHER)</span>
+                                <span id="vtoFeatherVal">2px</span>
+                            </div>
+                            <input type="range" id="vtoFeather" min="0" max="6" value="2" oninput="document.getElementById('vtoFeatherVal').textContent=this.value+'px'; procesarPrendaVTO()">
+                        </div>
+
+                        <div class="vto-slider-group">
+                            <div class="vto-slider-header">
+                                <span>ILUMINACIÓN Y INTEGRACIÓN</span>
+                                <span id="vtoLightVal">95%</span>
+                            </div>
+                            <input type="range" id="vtoLight" min="65" max="125" value="95" oninput="actualizarTransformVTO()">
+                        </div>
+
+                        <label class="vto-toggle-row" style="margin-top: 8px;">
+                            <span>Mostrar puntos de perspectiva (4 esquinas)</span>
+                            <input type="checkbox" id="vtoShowHandles" checked onchange="renderizarEscenaVTO()">
+                        </label>
+                    </div>
+
+                    <div class="vto-actions-footer">
+    <button type="button" id="btnGenerarVtonIA" class="vto-btn-primary" style="background: linear-gradient(135deg, #111111 0%, #2563eb 100%);" onclick="generarTryOnRealIA()">
+        <ion-icon name="sparkles-outline"></ion-icon> VESTIR CON IA REAL (FOTORREALISTA)
+    </button>
+    <button type="button" class="vto-btn-primary" onclick="agregarDesdeProbador()">
+        <ion-icon name="bag-handle-outline"></ion-icon> ME QUEDA BIEN • AÑADIR AL CARRITO
+    </button>
+    <button type="button" class="vto-btn-secondary" onclick="descargarFotoVTO()">
+        <ion-icon name="download-outline"></ion-icon> GUARDAR IMAGEN DEL OUTFIT
+    </button>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function actualizarLimitePorTalla(radio) {
+            const stock = parseInt(radio.dataset.stock || '10', 10);
+            const inputCantidad = document.getElementById('cantidad_input');
+            const indicador = document.getElementById('indicadorStockDetalle');
+            const btnSubmit = document.getElementById('btnSubmitDetalle');
+
+            const lookSelectMain = document.getElementById('lookSizeMain');
+            if (lookSelectMain) lookSelectMain.value = radio.value;
+
+            if (stock <= 0) {
+                indicador.className = 'stock-status-pill agotado';
+                indicador.innerHTML = '<ion-icon name="close-circle-outline"></ion-icon> TALLA AGOTADA';
+                inputCantidad.disabled = true;
+                btnSubmit.disabled = true;
+                return;
+            }
+
+            inputCantidad.disabled = false;
+            btnSubmit.disabled = false;
+            inputCantidad.max = stock;
+            if (parseInt(inputCantidad.value, 10) > stock) {
+                inputCantidad.value = stock;
+            }
+
+            if (stock <= 5) {
+                indicador.className = 'stock-status-pill bajo';
+                indicador.innerHTML = `<ion-icon name="alert-circle-outline"></ion-icon> ¡ÚLTIMAS ${stock} UNIDADES EN TALLA ${radio.value}!`;
+            } else {
+                indicador.className = 'stock-status-pill';
+                indicador.innerHTML = `<ion-icon name="checkmark-circle-outline"></ion-icon> EN STOCK (${stock} DISPONIBLES EN TALLA ${radio.value})`;
+            }
+        }
+
+        function recalcularTotalLook() {
+            const section = document.getElementById('completaLookSection');
+            if (!section) return;
+
+            const basePrecio = parseFloat(section.dataset.basePrecio) || 0;
+            let totalOriginal = basePrecio;
+            let extrasActivos = 0;
+
+            document.querySelectorAll('.look-extra-item').forEach(card => {
+                const check = card.querySelector('.look-checkbox');
+                if (check && check.checked) {
+                    card.classList.remove('desactivado');
+                    totalOriginal += parseFloat(card.dataset.precio) || 0;
+                    extrasActivos++;
+                } else {
+                    card.classList.add('desactivado');
+                }
+            });
+
+            const aplicaDescuento = extrasActivos > 0;
+            const totalFinal = aplicaDescuento ? totalOriginal * 0.90 : totalOriginal;
+
+            const elOld = document.getElementById('lookPrecioOriginal');
+            const elFinal = document.getElementById('lookPrecioFinal');
+            const elTag = document.getElementById('lookAhorroTag');
+
+            if (elOld) {
+                elOld.textContent = `$${totalOriginal.toFixed(2)} MXN`;
+                elOld.style.display = aplicaDescuento ? 'block' : 'none';
+            }
+            if (elFinal) elFinal.textContent = `$${totalFinal.toFixed(2)} MXN`;
+            if (elTag) elTag.style.display = aplicaDescuento ? 'inline-block' : 'none';
+        }
+
+        async function agregarOutfitAlCarrito() {
+            const section = document.getElementById('completaLookSection');
+            const btn = document.getElementById('btnAgregarLook');
+            if (!section || !btn) return;
+
+            const cartUrl = section.dataset.cartUrl;
+            const csrfToken = typeof getCSRFToken === 'function'
+                ? getCSRFToken()
+                : (document.querySelector('[name=csrfmiddlewaretoken]')?.value || '');
+
+            const prendas = [{
+                producto_id: section.dataset.baseId,
+                talla: document.getElementById('lookSizeMain')?.value || 'M',
+                cantidad: 1
+            }];
+
+            document.querySelectorAll('.look-extra-item').forEach(card => {
+                const check = card.querySelector('.look-checkbox');
+                if (check && check.checked) {
+                    prendas.push({
+                        producto_id: card.dataset.id,
+                        talla: card.querySelector('.look-size-select')?.value || 'M',
+                        cantidad: 1
+                    });
+                }
+            });
+
+            btn.disabled = true;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = 'AGREGANDO OUTFIT...';
+
+            let ultimoCount = null;
+            let agregadas = 0;
+
+            try {
+                for (const item of prendas) {
+                    const formData = new FormData();
+                    formData.append('producto_id', item.producto_id);
+                    formData.append('talla', item.talla);
+                    formData.append('cantidad', item.cantidad);
+
+                    const resp = await fetch(cartUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.ok) {
+                        if (data.login_url) {
+                            mostrarToastVertice(
+                                'Inicia sesión',
+                                data.error || 'Inicia sesión para agregar el look a tu bolsa.',
+                                data.login_url,
+                                'ENTRAR',
+                                true
+                            );
+                            return;
+                        }
+                        mostrarToastVertice(
+                            'Aviso de inventario',
+                            data.error || 'Una de las prendas no pudo agregarse.',
+                            null,
+                            '',
+                            true
+                        );
+                    } else {
+                        ultimoCount = data.count;
+                        agregadas++;
+                    }
+                }
+
+                if (agregadas > 0) {
+                    if (typeof renderizarBadgeCarrito === 'function' && ultimoCount !== null) {
+                        renderizarBadgeCarrito(ultimoCount);
+                    }
+                    if (typeof mostrarToastVertice === 'function') {
+                        mostrarToastVertice(
+                            'Outfit agregado',
+                            `Se añadieron ${agregadas} prenda(s) de tu look a la bolsa.`,
+                            '/checkout/',
+                            'VER BOLSA'
+                        );
+                    }
+                }
+            } catch (err) {
+                console.error('Error al agregar outfit:', err);
+                if (typeof mostrarToastVertice === 'function') {
+                    mostrarToastVertice('Error', 'No se pudo agregar el outfit. Intenta de nuevo.', null, '', true);
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        }
+    </script>
+
+</body>
+
+</html>

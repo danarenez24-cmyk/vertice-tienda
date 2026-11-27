@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vértice - Confirmar Inicio de Sesión</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+        }
+        .title { font-size: 20px; font-weight: bold; margin-bottom: 10px; color: #111; }
+        .subtitle { font-size: 14px; color: #666; margin-bottom: 25px; line-height: 1.4; }
+        .success-msg { color: #2e7d32; font-weight: bold; font-size: 16px; margin-top: 15px; }
+        .error-msg { color: #d32f2f; font-weight: bold; font-size: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        {% if error %}
+            <p class="error-msg">{{ error }}</p>
+        {% else %}
+            <div class="title">AUTORIZAR INICIO DE SESIÓN</div>
+            <p class="subtitle">Presiona el botón a continuación para acceder instantáneamente a tu cuenta en la computadora.</p>
+
+            <!-- Botón oficial Google Sign-In -->
+            <div id="g_id_onload"
+                 data-client_id="{{ google_client_id }}"
+                 data-callback="confirmarGoogleMovel">
+            </div>
+
+            <div class="g_id_signin" 
+                 data-type="standard" 
+                 data-shape="rectangular" 
+                 data-theme="filled_blue" 
+                 data-text="continue_with" 
+                 data-size="large">
+            </div>
+
+            <div id="statusMessage"></div>
+        {% endif %}
+    </div>
+
+    <script>
+        function confirmarGoogleMovel(response) {
+            document.getElementById('statusMessage').innerHTML = '<p style="color:#666;">Verificando...</p>';
+
+            fetch('/aprobar-login-qr/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    token_qr: '{{ token }}',
+                    google_jwt: response.credential
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    document.getElementById('statusMessage').innerHTML = 
+                        '<p class="success-msg">¡Listo! Ya puedes ver tu sesión iniciada en la computadora.</p>';
+                } else {
+                    document.getElementById('statusMessage').innerHTML = 
+                        '<p class="error-msg">Error al autorizar. Inténtalo de nuevo.</p>';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

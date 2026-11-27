@@ -1,0 +1,781 @@
+.detalle-pagina-container {
+    max-width: 1100px;
+    margin: 130px auto 70px;
+    padding: 0 25px;
+    min-height: calc(100vh - 400px);
+}
+
+.btn-volver-atras {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #111111;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+    transition: transform 0.2s ease;
+}
+
+.btn-volver-atras:hover {
+    transform: translateX(-4px);
+}
+
+.detalle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: start;
+}
+
+/* Columna de Imagen */
+.detalle-col-imagen {
+    width: 100%;
+}
+
+.imagen-wrapper-detalle {
+    width: 100%;
+    height: 520px;
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+}
+
+.imagen-wrapper-detalle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.imagen-wrapper-detalle:hover img {
+    transform: scale(1.05);
+}
+
+/* Columna de Información */
+.detalle-col-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.categoria-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #888888;
+    margin-bottom: 8px;
+}
+
+.titulo-detalle {
+    font-size: 30px;
+    font-weight: 700;
+    color: #111111;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+}
+
+.precios-detalle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.precio-actual-detalle {
+    font-size: 22px;
+    font-weight: 700;
+    color: #000000;
+}
+
+.precio-original-detalle {
+    font-size: 16px;
+    color: #999999;
+    text-decoration: line-through;
+}
+
+.descripcion-detalle {
+    font-size: 14px;
+    color: #555555;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+/* Selección de Tallas (Píldoras) */
+.bloque-opciones {
+    margin-bottom: 22px;
+}
+
+.label-opcion {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #222222;
+    margin-bottom: 10px;
+}
+
+.grid-tallas {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.talla-pill input[type="radio"] {
+    display: none; /* Oculta el radio button por defecto */
+}
+
+.talla-pill span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #222222;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    background-color: #ffffff;
+}
+
+.talla-pill span:hover {
+    border-color: #000000;
+}
+
+.talla-pill input[type="radio"]:checked + span {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+
+/* Cantidad */
+.input-cantidad {
+    width: 80px;
+    padding: 10px 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    text-align: center;
+    background-color: #f7f7f7;
+}
+
+.input-cantidad:focus {
+    border-color: #000000;
+    background-color: #ffffff;
+}
+
+/* Botón Añadir al Carrito */
+.btn-añadir-carrito {
+    width: 100%;
+    padding: 16px;
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-añadir-carrito:hover {
+    background-color: #222222;
+    transform: translateY(-2px);
+}
+
+.btn-añadir-carrito ion-icon {
+    font-size: 18px;
+}
+
+.nota-envio-detalle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #666666;
+    margin-top: 20px;
+}
+
+.nota-envio-detalle ion-icon {
+    font-size: 16px;
+    color: #111111;
+}
+
+/* Adaptación para Pantallas Pequeñas */
+@media (max-width: 850px) {
+    .detalle-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .imagen-wrapper-detalle {
+        height: 380px;
+    }
+
+    .detalle-pagina-container {
+        margin-top: 100px;
+    }
+
+    .titulo-detalle {
+        font-size: 24px;
+    }
+}
+/* ==========================================================================
+   FIX BARRA DE NAVEGACIÓN EN PÁGINAS INTERNAS
+   ========================================================================== */
+
+.menuprincipal {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e5e5e5;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    padding: 12px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Asegurar que el menú hamburguesa tenga líneas negras */
+.menuhamburguesa span {
+    background-color: #000000 !important;
+}
+
+/* Ajuste del logo en la navegación */
+.nav-center .logo {
+    max-height: 55px;
+    object-fit: contain;
+}
+
+/* Iconos y texto de usuario */
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #000000 !important;
+}
+/* ==========================================================================
+   CONTROL DE STOCK POR TALLA Y FAVORITOS EN DETALLE DE PRODUCTO
+   ========================================================================== */
+
+.detalle-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.btn-favorito-detalle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    color: #111111;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-favorito-detalle:hover {
+    border-color: #111111;
+    transform: scale(1.06);
+}
+
+.btn-favorito-detalle.active {
+    color: #d9534f;
+    border-color: #f3c6c4;
+    background: #fff8f8;
+}
+
+.stock-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    padding: 5px 11px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    background: #f4f4f4;
+    color: #111111;
+}
+
+.stock-status-pill.bajo {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.stock-status-pill.agotado {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.talla-pill.agotada {
+    opacity: 0.42;
+    cursor: not-allowed;
+    text-decoration: line-through;
+    background: #f5f5f5;
+}
+
+.talla-pill.agotada span {
+    cursor: not-allowed;
+}
+
+.btn-añadir-carrito:disabled {
+    background: #888888;
+    border-color: #888888;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+/* ==========================================================================
+   ESTILOS: PROBADOR VIRTUAL VÉRTICE (VIRTUAL TRY-ON MODAL)
+   ========================================================================== */
+.btn-probador-virtual {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px 20px;
+    background: #ffffff;
+    color: #111111;
+    border: 2px solid #111111;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-probador-virtual:hover {
+    background: #111111;
+    color: #ffffff;
+}
+
+.vto-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.78);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.vto-modal-overlay.abierto {
+    display: flex;
+}
+
+.vto-modal-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 960px;
+    max-height: 92vh;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    animation: vtoFadeIn 0.22s ease;
+}
+
+@keyframes vtoFadeIn {
+    from { opacity: 0; transform: scale(0.97) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.vto-modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.vto-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vto-badge {
+    background: #111;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    padding: 4px 9px;
+    border-radius: 4px;
+}
+
+.vto-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    color: #111;
+}
+
+.vto-btn-close {
+    background: #f4f4f4;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #111;
+    transition: background 0.15s;
+}
+
+.vto-btn-close:hover {
+    background: #e2e2e2;
+}
+
+.vto-modal-body {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.vto-stage-area {
+    background: #f3f3f3;
+    position: relative;
+    min-height: 440px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+}
+
+.vto-placeholder {
+    text-align: center;
+    padding: 32px 24px;
+    max-width: 320px;
+}
+
+.vto-placeholder ion-icon {
+    font-size: 48px;
+    color: #111;
+    margin-bottom: 10px;
+}
+
+.vto-placeholder h4 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #111;
+}
+
+.vto-placeholder p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+}
+
+#vtoCanvas {
+    max-width: 100%;
+    max-height: 500px;
+    cursor: grab;
+    display: none;
+    touch-action: none;
+}
+
+#vtoCanvas:active {
+    cursor: grabbing;
+}
+
+.vto-webcam-wrap {
+    display: none;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.vto-webcam-wrap.activo {
+    display: flex;
+}
+
+#vtoVideo {
+    width: 100%;
+    max-height: 440px;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.vto-btn-capturar {
+    position: absolute;
+    bottom: 18px;
+    background: #ffffff;
+    color: #111111;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.vto-controls-area {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-left: 1px solid #eaeaea;
+}
+
+.vto-source-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.vto-btn-source {
+    padding: 11px 12px;
+    border: 1px solid #d4d4d4;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+}
+
+.vto-btn-source:hover {
+    border-color: #111;
+    background: #fafafa;
+}
+
+.vto-slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.vto-slider-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: #444;
+    letter-spacing: 0.5px;
+}
+
+.vto-slider-group input[type="range"] {
+    width: 100%;
+    accent-color: #111111;
+    cursor: pointer;
+}
+
+.vto-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f8f8;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #111;
+}
+
+.vto-toggle-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #111;
+    cursor: pointer;
+}
+
+.vto-actions-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #eaeaea;
+}
+
+.vto-btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.vto-btn-primary:hover {
+    background: #2b2b2b;
+}
+
+.vto-btn-secondary {
+    width: 100%;
+    padding: 10px;
+    background: #f4f4f4;
+    color: #111;
+    border: none;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.vto-btn-secondary:hover {
+    background: #e6e6e6;
+}
+
+@media (max-width: 768px) {
+    .vto-modal-body {
+        grid-template-columns: 1fr;
+    }
+    .vto-stage-area {
+        min-height: 320px;
+    }
+    .vto-controls-area {
+        border-left: none;
+        border-top: 1px solid #eaeaea;
+        padding: 16px;
+    }
+}
+.vto-quick-tools {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.vto-btn-mini {
+    height: 100%;
+    padding: 0 11px;
+    background: #f4f4f4;
+    color: #111;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.vto-btn-mini:hover {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+.vto-mode-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    background: #f2f2f2;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.vto-mode-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 6px;
+    border-radius: 7px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    color: #555;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+}
+
+.vto-mode-btn.active {
+    background: #111111;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.vto-brush-panel {
+    background: #f8f8f8;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vto-hint-text {
+    margin: 0;
+    font-size: 11px;
+    color: #666;
+    line-height: 1.4;
+}
+
+#vtoTransformPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}

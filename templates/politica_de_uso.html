@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos y Condiciones de Uso | VÉRTICE</title>
+
+    <!-- Fuentes y Hojas de Estilo -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=28">
+    <link rel="stylesheet" href="{% static 'css/legal.css' %}?v=2">
+    <script src="{% static 'js/global.js' %}?v=26" defer></script>
+
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body class="legal-body">
+
+    <!-- Navegador Principal -->
+    <header class="menuprincipal legal-header">
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo de Vértice" class="logo">
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper legal-cart-link" title="Ver Carrito">
+                <ion-icon name="bag-handle-outline" class="icono-bag legal-cart-icon"></ion-icon>
+            </a>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion legal-account-link">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Contenido Legal -->
+    <main class="legal-wrapper">
+        <span class="legal-kicker">DOCUMENTACIÓN LEGAL · VÉRTICE MX</span>
+        <h1 class="legal-title">TÉRMINOS Y CONDICIONES DE USO</h1>
+        <div class="legal-meta">
+            <span>Última actualización: Noviembre de 2026</span>
+            <span>Vigente para compras y navegación en VÉRTICE</span>
+        </div>
+
+        <div class="legal-highlight-box">
+            <p>Al crear una cuenta, iniciar sesión o realizar un pedido en <strong>VÉRTICE</strong>, aceptas cumplir con los presentes Términos y Condiciones de Uso, así como con nuestra <a href="{% url 'politica_privacidad' %}" class="legal-inline-link">Política de Privacidad</a>.</p>
+        </div>
+
+        <section class="legal-section">
+            <h2>1. Registro y Seguridad de la Cuenta</h2>
+            <p>Para acceder a funciones personalizadas como historial de pedidos, lista de favoritos o inicio de sesión rápido mediante código QR, Google o Apple, debes proporcionar información veraz y mantener la confidencialidad de tu contraseña (mínimo 8 caracteres). Eres responsable de toda actividad realizada desde tu cuenta.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>2. Catálogo, Precios y Disponibilidad</h2>
+            <ul>
+                <li>Todos los precios mostrados en el sitio están expresados en <strong>Pesos Mexicanos (MXN)</strong> e incluyen los impuestos aplicables conforme a la legislación vigente.</li>
+                <li>Las colecciones especiales (como <em>Fin de Año / Midnight Drop</em> o cápsulas de temporada) cuentan con inventario limitado. Agregar una prenda al carrito no garantiza su apartado hasta completar el proceso de pago.</li>
+                <li>Nos reservamos el derecho de actualizar precios, promociones o disponibilidad sin previo aviso.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>3. Envíos, Entregas y Cambios</h2>
+            <p>Los tiempos de entrega se calculan al momento de confirmar tu compra según tu código postal. Para solicitar cambios de talla o devoluciones por defecto de fabricación, cuentas con un plazo de <strong>15 días naturales</strong> posteriores a la recepción del pedido, siempre que la prenda conserve sus etiquetas originales y no presente señales de uso.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>4. Uso del Estilista IA y Probador Virtual</h2>
+            <p>El módulo de <strong>Estilista IA</strong> es una herramienta orientativa diseñada para sugerir combinaciones de prendas según tu estilo. Las vistas previas generadas son representaciones visuales aproximadas y pueden presentar ligeras variaciones de tono o caída respecto a la prenda física real. Queda prohibido subir contenido ofensivo, ilegal o imágenes de terceros sin su consentimiento.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>5. Propiedad Intelectual</h2>
+            <p>Todos los logotipos, diseños gráficos, fotografías editoriales, textos, código fuente e identidad visual de <strong>VÉRTICE</strong> son propiedad exclusiva de la marca y están protegidos por las leyes de propiedad intelectual e industrial. Queda prohibida su reproducción total o parcial sin autorización por escrito.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>6. Conducta del Usuario</h2>
+            <p>Te comprometes a utilizar el sitio web únicamente con fines lícitos y de compra personal, absteniéndote de realizar intentos de intrusión, extracción automatizada de datos o alteración del funcionamiento de la plataforma.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>7. Contacto y Atención al Cliente</h2>
+            <p>Para dudas sobre pedidos, aclaraciones o soporte técnico, puedes comunicarte con nuestro equipo en horario de atención (Lunes a Viernes de 7:00 a 18:00 hrs, Sábados de 8:00 a 17:00 hrs y Domingos de 8:00 a 15:00 hrs) vía WhatsApp al <strong>55 8806 2197</strong> o al correo <a href="mailto:aend091124hmcrxna6@soycecytem.mx" class="legal-inline-link">aend091124hmcrxna6@soycecytem.mx</a>.</p>
+        </section>
+
+        <div class="legal-nav-footer">
+            <a href="{% url 'politica_privacidad' %}" class="btn-legal-outline">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                VER POLÍTICA DE PRIVACIDAD
+            </a>
+            <a href="{% url 'login' %}" class="btn-legal-outline">
+                VOLVER AL INICIO DE SESIÓN
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+            </a>
+        </div>
+    </main>
+
+    <!-- Overlay y Menús Laterales -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+        {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+            <a href="{% url 'logout' %}" class="menu-logout-link">CERRAR SESIÓN</a>
+        {% else %}
+            <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+            <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Footer General -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex, CP 54743</p>
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Enviar Correo"><ion-icon name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook" target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr" class="btn-footer instagram" target="_blank" rel="noopener noreferrer" title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe class="footer-map-iframe" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx" width="600" height="450" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

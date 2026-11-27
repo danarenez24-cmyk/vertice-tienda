@@ -1,0 +1,408 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Gala & Fin de Año | VÉRTICE</title>
+
+    <!-- Fuentes y Hojas de Estilo -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,900;1,900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=26">
+    <link rel="stylesheet" href="{% static 'css/fin_de_año.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/estilista_ia.css' %}?v=1">
+<script src="{% static 'js/estilista_ia.js' %}?v=1" defer></script>
+    <!-- Scripts Base -->
+    <script src="{% static 'js/global.js' %}?v=26" defer></script>
+    <script src="{% static 'js/acciones.js' %}?v=5" defer></script>
+    <script src="{% static 'js/fin_de_año.js' %}?v=2" defer></script>
+
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body class="fde-body-light">
+
+    <!-- BARRA MARQUEE INFINITA (TICKER TAPE) -->
+    <div class="fde-ticker-wrap">
+        <div class="fde-ticker-move">
+            <span class="ticker-item">• VÉRTICE MIDNIGHT DROP 2026</span>
+            <span class="ticker-item">• EDICIÓN LIMITADA FIN DE AÑO</span>
+            <span class="ticker-item">• ENVÍOS PRIORITARIOS EXPRÉS</span>
+            <span class="ticker-item">• SILUETAS DE ALTA GALA</span>
+            <span class="ticker-item">• VÉRTICE MIDNIGHT DROP 2026</span>
+            <span class="ticker-item">• EDICIÓN LIMITADA FIN DE AÑO</span>
+            <span class="ticker-item">• ENVÍOS PRIORITARIOS EXPRÉS</span>
+            <span class="ticker-item">• SILUETAS DE ALTA GALA</span>
+        </div>
+    </div>
+
+    <!-- Header Principal VÉRTICE (Fondo Blanco) -->
+    <header class="menuprincipal header-fde-light">
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo Vértice" class="logo">
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper" style="text-decoration: none; color: inherit; display: flex; align-items: center; margin-right: 15px;" title="Ver Carrito y Pagar">
+                <ion-icon name="bag-handle-outline" class="icono-bag" style="font-size: 24px; color: #000;"></ion-icon>
+            </a>
+
+            <form action="{% url 'fin_año' %}" method="GET" class="search-box-wrapper">
+                <button type="submit" class="btn-search-icon">
+                    <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                </button>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar en FIN DE AÑO..." autocomplete="off">
+            </form>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion" style="text-decoration: none; color: inherit;">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if not query %}
+    <!-- HERO SPLIT ASIMÉTRICO EN TONOS CLAROS CON CONTADOR -->
+    <section class="fde-hero-split-light">
+        <div class="fde-hero-left">
+            <div class="fde-glitch-badge-light">
+                <span class="pulse-dot-green"></span> MIDNIGHT COUNTDOWN
+            </div>
+            <h1 class="fde-main-heading-light">MEDIANOCHE <span>/ GALA</span></h1>
+            <p class="fde-lead-p-light">Piezas de alta costura contemporánea confeccionadas en sedas pesadas, satén de
+                almidón y cortes asimétricos diseñados para destacar en la noche más importante del año.</p>
+
+            <!-- Reloj de Conteo Regresivo (Estilo Claro & Limpio) -->
+            <div class="fde-countdown-box-light">
+                <div class="time-block">
+                    <span id="cd-days">00</span>
+                    <label>DÍAS</label>
+                </div>
+                <span class="time-colon">:</span>
+                <div class="time-block">
+                    <span id="cd-hours">00</span>
+                    <label>HORAS</label>
+                </div>
+                <span class="time-colon">:</span>
+                <div class="time-block">
+                    <span id="cd-mins">00</span>
+                    <label>MINS</label>
+                </div>
+                <span class="time-colon">:</span>
+                <div class="time-block">
+                    <span id="cd-secs">00</span>
+                    <label>SEGS</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-card-poster-light">
+    <div class="poster-diptych-grid">
+        {% for producto in productos|slice:":2" %}
+        <a href="{% url 'detalle_producto' producto.id_str %}" class="poster-diptych-panel" title="{{ producto.nombre }}">
+            <img src="{{ producto.imagen|default:producto.imagen_url }}" alt="{{ producto.nombre }}">
+        </a>
+        {% empty %}
+        <div class="poster-diptych-panel">
+            <img src="{% static 'media/portada1.1.png' %}" alt="Siluetas Monocromáticas">
+        </div>
+        {% endfor %}
+    </div>
+
+    <span class="poster-tag-light">LOOKBOOK '26</span>
+
+    <div class="poster-footer-light">
+        <h3>SILUETAS MONOCROMÁTICAS</h3>
+        <p>Cápsula exclusiva de producción limitada.</p>
+    </div>
+</div>
+    </section>
+    {% else %}
+    <section style="padding: 155px 5% 10px; max-width: 1400px; margin: 0 auto;">
+        <p style="font-size: 13px; color: #555; letter-spacing: 1px; text-transform: uppercase;">
+            Resultados en FIN DE AÑO para: <strong>"{{ query }}"</strong>
+            <a href="{% url 'fin_año' %}" style="margin-left: 12px; color: #000; font-weight: 700; font-size: 11px;">[LIMPIAR FILTRO]</a>
+        </p>
+    </section>
+    {% endif %}
+
+    <!-- BARRA DE CONTROLES Y FILTROS -->
+    <section class="fde-controls-bar-light">
+        <div class="fde-controls-container">
+            <div class="fde-pills-scroll">
+                <button class="fde-pill-light active" data-categoria="todos"
+                    onclick="filtrarFde('todos', this)">TODOS</button>
+                <button class="fde-pill-light" data-categoria="gala" onclick="filtrarFde('gala', this)">VESTIDOS DE
+                    GALA</button>
+                <button class="fde-pill-light" data-categoria="smokings" onclick="filtrarFde('smokings', this)">SMOKINGS
+                    &amp; BLUSERS</button>
+                <button class="fde-pill-light" data-categoria="saten" onclick="filtrarFde('saten', this)">SATÉN &amp;
+                    SEDA</button>
+                <button class="fde-pill-light" data-categoria="accesorios"
+                    onclick="filtrarFde('accesorios', this)">ACCESORIOS NOCTURNOS</button>
+            </div>
+
+            <div class="fde-view-toggle-light">
+                <span class="toggle-label">VISTA:</span>
+                <button type="button" class="btn-toggle-light active" id="btnGridMode"
+                    onclick="cambiarModoVista('grid')" title="Vista Grid (4 columnas)">
+                    <ion-icon name="grid-outline"></ion-icon>
+                </button>
+                <button type="button" class="btn-toggle-light" id="btnEditorialMode"
+                    onclick="cambiarModoVista('editorial')" title="Vista Editorial (2 columnas ampliadas)">
+                    <ion-icon name="list-outline"></ion-icon>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CATÁLOGO PRINCIPAL -->
+    <main class="fde-catalog-section-light">
+       <div class="fde-catalog-info-light">
+            <span>MOSTRANDO <strong id="contadorFde">{{ productos|length }}</strong> DE {{ productos.paginator.count }} PIEZAS EXCLUSIVAS</span>
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <select id="ordenarPrecioFde" onchange="ordenarCatalogoFde(this.value)" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 600; background: #fff; color: #111; cursor: pointer;">
+                    <option value="default">ORDENAR: DESTACADOS</option>
+                    <option value="asc">PRECIO: MENOR A MAYOR</option>
+                    <option value="desc">PRECIO: MAYOR A MENOR</option>
+                </select>
+                <span class="fde-vip-tag-light"><ion-icon name="sparkles-outline"></ion-icon> STOCK DE EDICIÓN LIMITADA</span>
+            </div>
+        </div>
+
+        <div class="fde-grid-container grid-mode" id="gridFde">
+            {% for producto in productos %}
+            <article class="fde-card-light" data-categoria="{{ producto.categoria|default:''|lower }}"
+                data-nombre="{{ producto.nombre|default:''|lower }}"
+                data-precio="{{ producto.precio|default:0 }}"
+                data-orden="{{ forloop.counter }}">
+                <div class="fde-card-media-light">
+                    <button type="button" class="btn-wishlist-fde-light" data-producto-id="{{ producto.id_str }}" title="Guardar en favoritos"
+                        onclick="toggleFavoritoFde(this)">
+                        <ion-icon name="heart-outline"></ion-icon>
+                    </button>
+
+                    <a href="{% url 'detalle_producto' producto.id_str %}" class="fde-image-link">
+                        <img src="{{ producto.imagen|default:producto.imagen_url }}" alt="{{ producto.nombre }}"
+                            loading="lazy">
+                        <div class="fde-card-hover-overlay-light">
+                            <span>VER DETALLE EDITORIAL →</span>
+                        </div>
+
+                        {% if producto.agotado %}
+                        <span class="fde-badge-light" style="background: #555; color: #fff;">AGOTADO</span>
+                        {% elif producto.precio_original %}
+                        <span class="fde-badge-light badge-sale-light">OFERTA NYE</span>
+                        {% else %}
+                        <span class="fde-badge-light badge-edition-light">MIDNIGHT '26</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <div class="fde-card-content-light">
+                    <div class="fde-card-meta-light">
+                        <span class="fde-category">{{ producto.categoria|default:"MIDNIGHT CAPSULE"|upper }}</span>
+                        <span class="fde-sku">#NYE-{{ forloop.counter }}</span>
+                    </div>
+
+                    <h3 class="fde-product-name-light">
+                        <a href="{% url 'detalle_producto' producto.id_str %}">{{ producto.nombre }}</a>
+                    </h3>
+
+                    <div class="fde-price-block-light">
+                        <span class="price-current">${{ producto.precio }} MXN</span>
+                        {% if producto.precio_original %}
+                        <span class="price-old">${{ producto.precio_original }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if producto.agotado %}
+                <div class="fde-form-quick-light">
+                    <button type="button" class="btn-agotado-card" disabled>AGOTADO</button>
+                </div>
+                {% else %}
+                <!-- Selector Rápido de Tallas -->
+                <div class="card-size-selector">
+                    {% if producto.tallas %}
+                        {% for talla in producto.tallas %}
+                        <button type="button" class="size-pill-btn {% if forloop.first %}selected{% endif %}" onclick="seleccionarTallaCard(this, '{{ talla }}')">{{ talla }}</button>
+                        {% endfor %}
+                    {% else %}
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'S')">S</button>
+                        <button type="button" class="size-pill-btn selected" onclick="seleccionarTallaCard(this, 'M')">M</button>
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'L')">L</button>
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'XL')">XL</button>
+                    {% endif %}
+                </div>
+
+                <!-- Formulario de Compra Rápida Backend (AJAX en global.js) -->
+                <form action="{% url 'agregar_al_carrito' %}" method="POST" class="fde-form-quick-light">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id_str }}">
+                    <input type="hidden" name="talla" value="{{ producto.tallas.0|default:'M' }}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <button type="submit" class="btn-fde-add-light">
+                        <ion-icon name="bag-add-outline"></ion-icon>
+                        AGREGAR AL CARRITO
+                    </button>
+                </form>
+                {% endif %}
+            </article>
+            {% empty %}
+            <div class="fde-empty-state-light">
+                <ion-icon name="sparkles-outline"></ion-icon>
+                <p>No se encontraron prendas registradas en la colección de Fin de Año actualmente.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if productos.has_other_pages %}
+        <nav class="vertice-paginacion" aria-label="Paginación de catálogo Fin de Año">
+            {% if productos.has_previous %}
+                <a href="?page={{ productos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    &larr; ANTERIOR
+                </a>
+            {% endif %}
+
+            <span class="pag-info">
+                Página {{ productos.number }} de {{ productos.paginator.num_pages }}
+            </span>
+
+            {% if productos.has_next %}
+                <a href="?page={{ productos.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    SIGUIENTE &rarr;
+                </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </main>
+
+    <!-- BANNER EDITORIAL DE CIERRE -->
+    <section class="fde-editorial-banner-light">
+        <div class="fde-banner-content-light">
+            <span class="banner-kicker-light">VÉRTICE FINE TAILORING</span>
+            <h2>ELEGANCIA QUE TRASCIENDE LA MEDIANOCHE</h2>
+            <p>Diseño geométrico de precisión, texturas que reflejan la luz tenue y confección pensada para momentos
+                memorables.</p>
+        </div>
+    </section>
+
+    <!-- Overlay y Menús Laterales -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}" style="font-weight: 700; color: #000;">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+        {% if request.session.usuario_nombre %}
+        {% if request.session.usuario_rol == 'admin' or request.session.usuario_rol == 'superadmin' %}
+        <a href="{% url 'admin_dashboard' %}"
+            style="font-weight: 700; color: #000; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 5px;">PANEL
+            DE ADMINISTRACIÓN</a>
+        {% endif %}
+        <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+        <a href="{% url 'logout' %}" style="color: #d9534f;">CERRAR SESIÓN</a>
+        {% else %}
+        <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+        <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Footer General -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex,
+                    CP 54743</p>
+
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon
+                            name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Enviar Correo"><ion-icon
+                            name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank"
+                        rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook"
+                        target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon
+                            name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr"
+                        class="btn-footer instagram" target="_blank" rel="noopener noreferrer"
+                        title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx"
+                    width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        function ordenarCatalogoFde(criterio) {
+            const grid = document.getElementById('gridFde');
+            if (!grid) return;
+            const cards = Array.from(grid.querySelectorAll('.fde-card-light'));
+
+            cards.sort((a, b) => {
+                if (criterio === 'asc') {
+                    return parseFloat(a.dataset.precio || 0) - parseFloat(b.dataset.precio || 0);
+                } else if (criterio === 'desc') {
+                    return parseFloat(b.dataset.precio || 0) - parseFloat(a.dataset.precio || 0);
+                }
+                return parseInt(a.dataset.orden || 0, 10) - parseInt(b.dataset.orden || 0, 10);
+            });
+
+            cards.forEach(card => grid.appendChild(card));
+        }
+    </script>
+
+</body>
+
+</html>

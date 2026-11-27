@@ -1,0 +1,529 @@
+.menuprincipal {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e5e5e5;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.menuhamburguesa span {
+    background-color: #000000 !important;
+}
+
+.icono-carrito-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #000000;
+    transition: transform 0.2s ease;
+}
+
+.icono-carrito-wrapper:hover {
+    transform: scale(1.1);
+}
+
+.icono-bag {
+    font-size: 24px;
+    color: #000000 !important;
+}
+
+.nav-right .inicio_sesion p {
+    color: #000000;
+    margin: 0 0 0 8px;
+    font-size: 13px;
+}
+
+/* Header Hero Editorial para ÉL */
+.el-hero-header {
+    width: 100%;
+    margin-top: 100px;
+    padding: 50px 5% 35px;
+    background-color: #111111;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    border-bottom: 1px solid #222222;
+}
+
+.el-hero-content {
+    max-width: 800px;
+    width: 100%;
+}
+
+.el-badge-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #aaaaaa;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+
+.el-hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    color: #ffffff;
+}
+
+.el-hero-desc {
+    font-size: 14px;
+    color: #cccccc;
+    line-height: 1.5;
+    margin-bottom: 22px;
+}
+
+/* Filtros por Píldoras */
+.el-filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pill-btn {
+    padding: 8px 16px;
+    border: 1px solid #333333;
+    background-color: transparent;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.pill-btn.active,
+.pill-btn:hover {
+    background-color: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+}
+
+/* Contenedor de Catálogo */
+.el-catalogo-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 30px 20px 70px;
+}
+
+.el-bar-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #777777;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.el-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.el-sort-select {
+    padding: 6px 10px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    background-color: #ffffff;
+    color: #111111;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.el-sort-select:hover,
+.el-sort-select:focus {
+    border-color: #111111;
+}
+
+.el-envio-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #111111;
+}
+
+/* Retícula Grid de Productos */
+.el-grid-productos {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.el-card-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.el-card-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.el-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Contenedor de Imagen: Relleno total sin bordes grises */
+.el-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 330px;
+    background-color: #f4f4f4;
+    overflow: hidden;
+}
+
+.el-img-wrapper .el-card-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.el-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    transition: transform 0.5s ease;
+}
+
+.el-img-wrapper img.img-fallback {
+    object-fit: contain;
+    object-position: center;
+    padding: 50px;
+    opacity: 0.25;
+}
+
+.el-card-item:hover .el-img-wrapper img {
+    transform: scale(1.05);
+}
+
+/* Botón de Favoritos en Tarjeta */
+.btn-wishlist-el {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-wishlist-el:hover {
+    transform: scale(1.08);
+    background: #ffffff;
+}
+
+.btn-wishlist-el ion-icon {
+    font-size: 18px;
+}
+
+.el-card-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    z-index: 4;
+}
+
+.tag-nuevo {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.tag-oferta {
+    background-color: #d9534f;
+    color: #ffffff;
+}
+
+.tag-agotado {
+    background-color: #555555;
+    color: #ffffff;
+}
+
+.el-card-details {
+    padding: 14px 14px 8px;
+}
+
+.el-product-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111111;
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+.el-price-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.el-price-current {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000000;
+}
+
+.el-price-old {
+    font-size: 12px;
+    color: #999999;
+    text-decoration: line-through;
+}
+
+.el-card-sub {
+    font-size: 10px;
+    color: #888888;
+    margin: 0;
+}
+
+/* Botón de Compra Rápida */
+.el-form-quick-add {
+    padding: 0 14px 14px;
+}
+
+.btn-el-quick {
+    width: 100%;
+    padding: 9px 10px;
+    background-color: #f4f4f4;
+    color: #111111;
+    border: none;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-el-quick:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+@media (max-width: 1024px) {
+    .el-grid-productos {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .menuprincipal {
+        height: 65px !important;
+        padding: 0 15px !important;
+    }
+
+    .el-hero-header {
+        margin-top: 65px;
+        padding: 28px 18px 22px;
+    }
+
+    .el-hero-title {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .el-hero-desc {
+        font-size: 12px;
+        line-height: 1.4;
+        margin-bottom: 16px;
+    }
+
+    .el-filter-pills {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        width: 100%;
+        padding-bottom: 6px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .pill-btn {
+        flex: 0 0 auto;
+        padding: 6px 14px;
+        font-size: 10px;
+    }
+
+    .el-catalogo-container {
+        padding: 20px 14px 50px;
+    }
+
+    .el-bar-info {
+        font-size: 10px;
+    }
+
+    .el-grid-productos {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .el-img-wrapper {
+        height: 220px;
+    }
+
+    .el-card-details {
+        padding: 10px 10px 6px;
+    }
+
+    .el-product-title {
+        font-size: 12px;
+    }
+
+    .el-price-current {
+        font-size: 13px;
+    }
+
+    .btn-el-quick {
+        padding: 8px 6px;
+        font-size: 9px;
+    }
+}
+
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-box-wrapper {
+    display: flex;
+    align-items: center;
+    background-color: #f2f2f2;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 6px 14px;
+    margin-right: 15px;
+    transition: all 0.3s ease;
+    width: 200px;
+}
+
+.search-box-wrapper:focus-within {
+    background-color: #ffffff;
+    border-color: #111111;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    width: 240px;
+}
+
+.btn-search-icon {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.search-box-wrapper .search-icon {
+    font-size: 18px;
+    color: #666666;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: color 0.2s ease;
+}
+
+.btn-search-icon:hover .search-icon {
+    color: #000000;
+}
+
+.search-box-wrapper input {
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 12px;
+    color: #111111;
+    width: 100%;
+}
+
+.search-box-wrapper input::placeholder {
+    color: #888888;
+}
+
+.el-catalogo-container.seccion-solo-resultados-el {
+    margin-top: 110px !important;
+}
+
+.sin-resultados {
+    width: 100%;
+    padding: 60px 20px;
+    text-align: center;
+    color: #777777;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.sin-resultados ion-icon {
+    font-size: 40px;
+    color: #999999;
+}
+
+@media (max-width: 768px) {
+    .search-box-wrapper {
+        width: 120px;
+        padding: 5px 10px;
+        margin-right: 10px;
+    }
+
+    .search-box-wrapper:focus-within {
+        width: 150px;
+    }
+
+    .search-box-wrapper input {
+        font-size: 11px;
+    }
+
+    .el-catalogo-container.seccion-solo-resultados-el {
+        margin-top: 80px !important;
+    }
+}

@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colección ÉL | VÉRTICE</title>
+
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=26">
+    <link rel="stylesheet" href="{% static 'css/el.css' %}?v=14">
+         <link rel="stylesheet" href="{% static 'css/estilista_ia.css' %}?v=1">
+<script src="{% static 'js/estilista_ia.js' %}?v=1" defer></script>
+    <script src="{% static 'js/global.js' %}?v=26" defer></script>
+    <script src="{% static 'js/acciones.js' %}?v=6" defer></script>
+    <script src="{% static 'js/el.js' %}?v=4" defer></script>
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Navegador Principal -->
+    <header class="menuprincipal">
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo de Vértice" class="logo">
+            </a>
+        </div>
+
+        <!-- Usuario, Carrito y Formulario de Búsqueda -->
+        <div class="nav-right">
+            <form action="{% url 'el' %}" method="GET" class="search-box-wrapper">
+                <button type="submit" class="btn-search-icon">
+                    <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                </button>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar en ÉL..." autocomplete="off">
+            </form>
+
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper" title="Ver Carrito y Pagar">
+                <ion-icon name="bag-handle-outline" class="icono-bag"></ion-icon>
+            </a>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion" style="text-decoration: none; color: inherit;">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if not query %}
+    <!-- Hero Editorial (Se oculta al buscar) -->
+    <section class="el-hero-header">
+        <div class="el-hero-content">
+            <span class="el-badge-tag">COLECCIÓN HOMBRE 2026</span>
+            <h1 class="el-hero-title">URBAN &amp; ESSENTIALS</h1>
+            <p class="el-hero-desc">Prendas con diseño contemporáneo, cortes estructurados y materiales premium diseñados para el uso diario.</p>
+            
+            <!-- Filtros Rápidos de Categoría -->
+            <div class="el-filter-pills">
+                <button class="pill-btn active" data-categoria="todos" onclick="filtrarPorPillEl(this)">TODOS</button>
+                <button class="pill-btn" data-categoria="playeras" onclick="filtrarPorPillEl(this)">PLAYERAS</button>
+                <button class="pill-btn" data-categoria="sudaderas" onclick="filtrarPorPillEl(this)">SUDADERAS</button>
+                <button class="pill-btn" data-categoria="chamarras" onclick="filtrarPorPillEl(this)">CHAMARRAS</button>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Contenido Principal: Catálogo Grid -->
+    <main class="el-catalogo-container {% if query %}seccion-solo-resultados-el{% endif %}">
+       <div class="el-bar-info">
+            <span>
+                {% if query %}
+                    RESULTADOS DE BÚSQUEDA PARA "{{ query }}": <strong id="contadorEl">{{ productos.paginator.count }}</strong> PRENDAS 
+                    &nbsp;—&nbsp; <a href="{% url 'el' %}" style="color: #111; font-weight: 700; text-decoration: underline;">Ver catálogo ÉL completo</a>
+                {% else %}
+                    MOSTRANDO <strong id="contadorEl">{{ productos|length }}</strong> DE {{ productos.paginator.count }} PRENDAS
+                {% endif %}
+            </span>
+            <div class="el-bar-actions">
+                <select id="ordenarPrecioEl" class="el-sort-select" onchange="ordenarCatalogoEl(this.value)">
+                    <option value="default">ORDENAR: DESTACADOS</option>
+                    <option value="asc">PRECIO: MENOR A MAYOR</option>
+                    <option value="desc">PRECIO: MAYOR A MENOR</option>
+                </select>
+                <span class="el-envio-badge"><ion-icon name="flash-outline"></ion-icon> ENVÍO RÁPIDO DISPONIBLE</span>
+            </div>
+        </div>
+
+        <div class="el-grid-productos" id="gridEl">
+            {% for producto in productos %}
+            <article class="el-card-item" 
+                     data-categoria="{{ producto.categoria|default:'varios'|lower }}"
+                     data-nombre="{{ producto.nombre|default:''|lower }}"
+                     data-precio="{{ producto.precio|default:0 }}"
+                     data-orden="{{ forloop.counter }}">
+                
+                <div class="el-img-wrapper">
+                    <button type="button" class="btn-wishlist-el" data-producto-id="{{ producto.id_str }}" title="Guardar en favoritos" onclick="toggleFavoritoEl(this)">
+                        <ion-icon name="heart-outline"></ion-icon>
+                    </button>
+
+                    <a href="{% url 'detalle_producto' producto.id_str %}" class="el-card-link">
+                       <img src="{{ producto.imagen|default:producto.imagen_url }}" 
+                            data-fallback="{% static 'media/logo1.png' %}"
+                            alt="{{ producto.nombre }}" 
+                            loading="lazy"
+                            onerror="this.onerror=null; this.src=this.dataset.fallback; this.classList.add('img-fallback');">
+                        {% if producto.agotado or producto.stock == 0 %}
+                        <span class="el-card-badge tag-agotado">AGOTADO</span>
+                        {% elif producto.precio_original %}
+                        <span class="el-card-badge tag-oferta">OFERTA</span>
+                        {% else %}
+                        <span class="el-card-badge tag-nuevo">NUEVO</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <a href="{% url 'detalle_producto' producto.id_str %}" class="el-card-link">
+                    <div class="el-card-details">
+                        <h3 class="el-product-title">{{ producto.nombre }}</h3>
+                        
+                        <div class="el-price-row">
+                            <span class="el-price-current">${{ producto.precio }} MXN</span>
+                            {% if producto.precio_original %}
+                            <span class="el-price-old">${{ producto.precio_original }}</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="el-card-sub">IVA incluido</p>
+                    </div>
+                </a>
+
+                {% if producto.agotado or producto.stock == 0 %}
+                <div class="el-form-quick-add">
+                    <button type="button" class="btn-agotado-card" disabled>AGOTADO</button>
+                </div>
+                {% else %}
+                <!-- Selector Rápido de Tallas -->
+                <div class="card-size-selector">
+                    {% if producto.tallas %}
+                        {% for talla in producto.tallas %}
+                        <button type="button" class="size-pill-btn {% if forloop.first %}selected{% endif %}" onclick="seleccionarTallaCard(this, '{{ talla }}')">{{ talla }}</button>
+                        {% endfor %}
+                    {% else %}
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'S')">S</button>
+                        <button type="button" class="size-pill-btn selected" onclick="seleccionarTallaCard(this, 'M')">M</button>
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'L')">L</button>
+                        <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'XL')">XL</button>
+                    {% endif %}
+                </div>
+
+                <!-- Formulario de compra rápida al carrito (AJAX en global.js) -->
+                <form action="{% url 'agregar_al_carrito' %}" method="POST" class="el-form-quick-add">
+                    {% csrf_token %}
+                    <input type="hidden" name="producto_id" value="{{ producto.id_str }}">
+                    <input type="hidden" name="talla" value="{{ producto.tallas.0|default:'M' }}">
+                    <input type="hidden" name="cantidad" value="1">
+                    <button type="submit" class="btn-el-quick">
+                        <ion-icon name="bag-add-outline"></ion-icon>
+                        AGREGAR AL CARRITO
+                    </button>
+                </form>
+                {% endif %}
+            </article>
+            {% empty %}
+            <div class="sin-resultados" style="grid-column: 1 / -1; display: flex;">
+                <ion-icon name="search-outline"></ion-icon>
+                <p>No se encontraron prendas en la colección ÉL que coincidan con "{{ query }}".</p>
+                <a href="{% url 'el' %}" style="color: #111; font-weight: 700; text-decoration: underline; margin-top: 5px;">Regresar a la colección ÉL</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if productos.has_other_pages %}
+        <nav class="vertice-paginacion" aria-label="Paginación de catálogo ÉL">
+            {% if productos.has_previous %}
+                <a href="?page={{ productos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    &larr; ANTERIOR
+                </a>
+            {% endif %}
+
+            <span class="pag-info">
+                Página {{ productos.number }} de {{ productos.paginator.num_pages }}
+            </span>
+
+            {% if productos.has_next %}
+                <a href="?page={{ productos.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    SIGUIENTE &rarr;
+                </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </main>
+
+    <!-- Overlay de Menú -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <!-- Menú Hamburguesa (Categorías) -->
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}" style="font-weight: 700; color: #000;">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <!-- Menú Lateral de Cuenta -->
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+
+        {% if request.session.usuario_nombre %}
+            {% if request.session.usuario_rol == 'admin' or request.session.usuario_rol == 'superadmin' %}
+            <a href="{% url 'admin_dashboard' %}" style="font-weight: 700; color: #000; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 5px;">PANEL DE ADMINISTRACIÓN</a>
+            {% endif %}
+            <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+            <a href="{% url 'logout' %}" style="color: #d9534f;">CERRAR SESIÓN</a>
+        {% else %}
+            <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+            <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Footer General -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex, CP 54743</p>
+
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Enviar Correo"><ion-icon name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook" target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr" class="btn-footer instagram" target="_blank" rel="noopener noreferrer" title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        function ordenarCatalogoEl(criterio) {
+            const grid = document.getElementById('gridEl');
+            if (!grid) return;
+            const cards = Array.from(grid.querySelectorAll('.el-card-item'));
+
+            cards.sort((a, b) => {
+                if (criterio === 'asc') {
+                    return parseFloat(a.dataset.precio || 0) - parseFloat(b.dataset.precio || 0);
+                } else if (criterio === 'desc') {
+                    return parseFloat(b.dataset.precio || 0) - parseFloat(a.dataset.precio || 0);
+                }
+                return parseInt(a.dataset.orden || 0, 10) - parseInt(b.dataset.orden || 0, 10);
+            });
+
+            cards.forEach(card => grid.appendChild(card));
+        }
+    </script>
+
+</body>
+
+</html>
+```[cite: 3]

@@ -1,0 +1,439 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil | VÉRTICE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/perfil.css' %}?v=6">
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Header Principal -->
+    <header>
+        <a href="{% url 'inicio' %}" class="brand-logo">VÉRTICE</a>
+        <div class="header-actions">
+            <a href="{% url 'inicio' %}">← VOLVER A LA TIENDA</a>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal del Perfil -->
+    <div class="account-container">
+
+        <!-- Menú Lateral / Sidebar -->
+        <aside class="sidebar">
+            <div class="user-greeting">
+                <h3>{{ usuario.nombre }} {{ usuario.apellidos }}</h3>
+                <p>{{ usuario.email }}</p>
+            </div>
+
+            <ul class="nav-menu">
+                {% if usuario.rol == 'admin' or usuario.rol == 'superadmin' %}
+                <li class="nav-item nav-item-admin">
+                    <a href="{% url 'admin_dashboard' %}" class="btn-admin-link">
+                        <ion-icon name="shield-checkmark-outline"></ion-icon>
+                        <span>PANEL DE ADMIN</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item">
+                    <button class="nav-button" onclick="openTab(event, 'tab-pedidos')">
+                        01 | MIS PEDIDOS
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-button" onclick="openTab(event, 'tab-datos')">
+                        02 | MIS DATOS
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-button" onclick="openTab(event, 'tab-seguridad')">
+                        03 | SEGURIDAD
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-button active" onclick="openTab(event, 'tab-metodos-pago')">
+                        04 | METODOS DE PAGO
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-button" onclick="openTab(event, 'tab-favoritos')">
+                        05 | MIS FAVORITOS
+                        <span class="fav-count-pill" id="perfilFavCount">{{ productos_favoritos|length }}</span>
+                    </button>
+                </li>
+            </ul>
+
+            <a href="{% url 'logout' %}" class="btn-logout">CERRAR SESIÓN</a>
+        </aside>
+
+        <!-- Panel de Contenido -->
+        <main class="content-panel">
+
+            <!-- Alertas / Mensajes de Django -->
+            {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 01 | MIS PEDIDOS -->
+            <div id="tab-pedidos" class="tab-content">
+                <h2 class="section-title">MIS PEDIDOS Y TICKETS DIGITALES</h2>
+
+                {% if pedidos %}
+                <div class="orders-container" id="ordersContainer" data-estados-url="{% url 'estado_pedidos_usuario_json' %}">
+                    {% for pedido in pedidos %}
+                    <div class="order-card" data-pedido-id="{{ pedido.id_str }}">
+                        <div class="order-details">
+                            <img src="{{ pedido.producto_imagen }}" alt="{{ pedido.producto_nombre }}" class="order-img">
+                            <div>
+                                <span class="order-folio-tag">FOLIO: #{{ pedido.folio }}</span>
+                                <h3>{{ pedido.producto_nombre }}</h3>
+                                <p>Talla: <strong>{{ pedido.talla }}</strong> | Cantidad: <strong>{{ pedido.cantidad }}</strong></p>
+                                <p class="order-date">Fecha: {{ pedido.fecha }}</p>
+                            </div>
+                        </div>
+                        <div class="order-summary">
+                            <span class="order-total">${{ pedido.total }} MXN</span>
+                            <span class="status-badge status-{{ pedido.estado|default:'procesando'|lower }}" data-status-pedido="{{ pedido.id_str }}">
+                                {{ pedido.estado|default:"Procesando" }}
+                            </span>
+                            <button type="button"
+                                    class="btn-ticket-qr"
+                                    data-pedido-id="{{ pedido.id_str }}"
+                                    data-folio="{{ pedido.folio }}"
+                                    data-producto="{{ pedido.producto_nombre }}"
+                                    data-talla="{{ pedido.talla }}"
+                                    data-cantidad="{{ pedido.cantidad }}"
+                                    data-total="{{ pedido.total }}"
+                                    data-fecha="{{ pedido.fecha }}"
+                                    data-estado="{{ pedido.estado|default:'Procesando' }}"
+                                    data-qr-url="{% url 'generar_qr_pedido' pedido.id_str %}"
+                                    onclick="abrirTicketQR(this)">
+                                <ion-icon name="qr-code-outline"></ion-icon> VER TICKET QR
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-orders">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                    <p>Todavía no has realizado ningún pedido.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 02 | MIS DATOS -->
+            <div id="tab-datos" class="tab-content">
+                <h2 class="section-title">INFORMACIÓN PERSONAL</h2>
+
+                <form action="{% url 'actualizar_perfil' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" name="nombre" value="{{ usuario.nombre }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" name="apellidos" value="{{ usuario.apellidos }}" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>Correo Electrónico (No modificable)</label>
+                            <input type="email" value="{{ usuario.email }}" readonly>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-save">GUARDAR CAMBIOS</button>
+                </form>
+            </div>
+
+            <!-- 03 | SEGURIDAD -->
+            <div id="tab-seguridad" class="tab-content">
+                <h2 class="section-title">CAMBIAR CONTRASEÑA</h2>
+
+                <form action="{% url 'cambiar_password' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Contraseña Actual</label>
+                        <input type="password" name="pass_actual" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña (mínimo 8 caracteres)</label>
+                        <input type="password" name="pass_nueva" required minlength="8">
+                    </div>
+                    <button type="submit" class="btn-save">ACTUALIZAR CONTRASEÑA</button>
+                </form>
+            </div>
+
+            <!-- 04 | METODOS DE PAGO -->
+            <div id="tab-metodos-pago" class="tab-content active">
+                <h2 class="section-title">TUS TARJETAS GUARDADAS</h2>
+
+                {% if tarjetas %}
+                <div class="tarjetas-grid">
+                    {% for tarjeta in tarjetas %}
+                    <div class="saved-card-item">
+                        <div class="saved-card-header">
+                            <div>
+                                <span class="card-brand">{{ tarjeta.marca|upper }}</span>
+                                <span class="card-last4">•••• {{ tarjeta.ultimos_4 }}</span>
+                            </div>
+
+                            <form action="{% url 'eliminar_tarjeta' tarjeta.id_str %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta tarjeta?');" class="delete-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-delete-card" title="Eliminar tarjeta">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+
+                        <p class="card-holder-name">{{ tarjeta.titular }}</p>
+                        <p class="card-exp-date">Expira: {{ tarjeta.expiracion }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-orders">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                    <p>Todavía no tienes ninguna tarjeta registrada</p>
+                </div>
+                {% endif %}
+
+                <!-- Formulario Agregar Tarjeta -->
+                <div class="card-section-wrapper">
+                    <h3 class="section-subtitle">AGREGAR NUEVA TARJETA</h3>
+
+                    <!-- Vista Previa de Tarjeta -->
+                    <div class="credit-card-preview" id="creditCardPreview">
+                        <div class="card-top-row">
+                            <div class="card-chip"></div>
+                            <span class="card-brand-logo" id="previewBrand">VÉRTICE</span>
+                        </div>
+
+                        <div class="card-number-display" id="previewNumber">
+                            •••• •••• •••• ••••
+                        </div>
+
+                        <div class="card-bottom-row">
+                            <div>
+                                <span class="card-label">TITULAR</span>
+                                <div class="card-val" id="previewHolder">NOMBRE Y APELLIDO</div>
+                            </div>
+                            <div>
+                                <span class="card-label">VENCIMIENTO</span>
+                                <div class="card-val" id="previewExp">MM/AA</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="{% url 'agregar_tarjeta' %}" method="POST" id="formTarjeta">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Tipo de Tarjeta</label>
+                            <div class="radio-options">
+                                <label class="radio-custom">
+                                    <input type="radio" name="tipo_cuenta" value="Credito" checked>
+                                    <span>Crédito</span>
+                                </label>
+                                <label class="radio-custom">
+                                    <input type="radio" name="tipo_cuenta" value="Debito">
+                                    <span>Débito</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="numero_tarjeta">Número de Tarjeta</label>
+                            <input type="text" id="numero_tarjeta" name="numero_tarjeta" placeholder="1234 5678 9101 1121" maxlength="19" required autocomplete="off">
+                            <small class="field-error" id="error-numero"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="titular">Nombre del Titular</label>
+                            <input type="text" id="titular" name="titular" placeholder="EJ. DANIEL ARELLANO" required autocomplete="off" class="text-uppercase">
+                            <small class="field-error" id="error-titular"></small>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="expiracion">Vencimiento (MM/AA)</label>
+                                <input type="text" id="expiracion" name="expiracion" placeholder="MM/AA" maxlength="5" required autocomplete="off">
+                                <small class="field-error" id="error-expiracion"></small>
+                            </div>
+                            <div class="form-group">
+                                <label for="cvv">CVV</label>
+                                <input type="password" id="cvv" name="cvv" placeholder="123" maxlength="4" required autocomplete="off">
+                                <small class="field-error" id="error-cvv"></small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-save">GUARDAR TARJETA</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 05 | MIS FAVORITOS -->
+            <div id="tab-favoritos" class="tab-content">
+                <h2 class="section-title">MIS PRENDAS FAVORITAS</h2>
+
+                {% if productos_favoritos %}
+                <div class="favoritos-grid" id="favoritosGrid">
+                    {% for prod in productos_favoritos %}
+                    <article class="fav-card" data-producto-id="{{ prod.id_str }}">
+                        <div class="fav-img-box">
+                            <button type="button"
+                                    class="btn-remove-fav"
+                                    title="Quitar de favoritos"
+                                    data-producto-id="{{ prod.id_str }}"
+                                    data-url="{% url 'toggle_favorito' %}"
+                                    onclick="quitarFavoritoPerfil(this)">
+                                <ion-icon name="heart"></ion-icon>
+                            </button>
+
+                            {% if prod.agotado %}
+                            <span class="fav-badge-agotado">AGOTADO</span>
+                            {% endif %}
+
+                            <a href="{% url 'detalle_producto' prod.id_str %}" class="fav-link">
+                                <img src="{{ prod.imagen }}"
+                                     data-fallback="{% static 'media/logo1.png' %}"
+                                     alt="{{ prod.nombre }}"
+                                     onerror="this.onerror=null; this.src=this.dataset.fallback; this.classList.add('img-fallback');">
+                            </a>
+                        </div>
+
+                        <div class="fav-info">
+                            <a href="{% url 'detalle_producto' prod.id_str %}" class="fav-title-link">
+                                <h3>{{ prod.nombre }}</h3>
+                            </a>
+
+                            <div class="fav-price-row">
+                                <span class="fav-price">${{ prod.precio }} MXN</span>
+                                {% if prod.precio_original %}
+                                <span class="fav-price-old">${{ prod.precio_original }}</span>
+                                {% endif %}
+                            </div>
+
+                            {% if prod.agotado %}
+                            <button type="button" class="btn-fav-disabled" disabled>AGOTADO</button>
+                            {% else %}
+                            <div class="fav-sizes">
+                                {% if prod.tallas %}
+                                    {% for talla in prod.tallas %}
+                                    <button type="button" class="fav-size-btn {% if forloop.first %}selected{% endif %}" onclick="seleccionarTallaFav(this, '{{ talla }}')">{{ talla }}</button>
+                                    {% endfor %}
+                                {% else %}
+                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'S')">S</button>
+                                    <button type="button" class="fav-size-btn selected" onclick="seleccionarTallaFav(this, 'M')">M</button>
+                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'L')">L</button>
+                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'XL')">XL</button>
+                                {% endif %}
+                            </div>
+
+                            <form action="{% url 'agregar_al_carrito' %}" method="POST" class="fav-cart-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="producto_id" value="{{ prod.id_str }}">
+                                <input type="hidden" name="talla" value="{{ prod.tallas.0|default:'M' }}">
+                                <input type="hidden" name="cantidad" value="1">
+                                <button type="submit" class="btn-fav-cart">
+                                    <ion-icon name="bag-add-outline"></ion-icon> AGREGAR AL CARRITO
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="empty-orders {% if productos_favoritos %}hidden-empty{% endif %}" id="emptyFavoritos">
+                    <ion-icon name="heart-outline" class="empty-fav-icon"></ion-icon>
+                    <p>Aún no has guardado prendas en tus favoritos.</p>
+                    <a href="{% url 'inicio' %}" class="btn-explore-store">EXPLORAR CATÁLOGO</a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL TICKET DIGITAL CON QR -->
+    <div id="modalTicketQR" class="ticket-modal-overlay" onclick="cerrarTicketQR(event)">
+        <div class="ticket-modal-box" onclick="event.stopPropagation()">
+            <button type="button" class="ticket-close-btn" onclick="cerrarTicketQR()">&times;</button>
+
+            <div class="ticket-receipt" id="areaImpresionTicket">
+                <div class="ticket-header">
+                    <h2>VÉRTICE</h2>
+                    <p>COMPROBANTE DIGITAL DE COMPRA</p>
+                    <span class="ticket-folio-badge" id="tkFolio">#VRT-000000</span>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="ticket-meta">
+                    <div><span>CLIENTE:</span> <strong id="tkCliente">{{ usuario.nombre }} {{ usuario.apellidos }}</strong></div>
+                    <div><span>CORREO:</span> <strong id="tkEmail">{{ usuario.email }}</strong></div>
+                    <div><span>FECHA:</span> <strong id="tkFecha">--/--/----</strong></div>
+                    <div><span>ESTADO:</span> <strong id="tkEstado">PROCESANDO</strong></div>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="ticket-item-block">
+                    <p class="ticket-item-name" id="tkProducto">Producto</p>
+                    <div class="ticket-item-specs">
+                        <span>Talla: <strong id="tkTalla">M</strong></span>
+                        <span>Cant.: <strong id="tkCantidad">1</strong></span>
+                    </div>
+                </div>
+
+                <div class="ticket-total-row">
+                    <span>TOTAL PAGADO</span>
+                    <strong id="tkTotal">$0.00 MXN</strong>
+                </div>
+
+                <div class="ticket-divider"></div>
+
+                <div class="ticket-qr-section">
+                    <img id="tkQrImg" src="" alt="Código QR del Pedido">
+                    <p>Presenta este código QR en sucursal para recolección o validación de pedido.</p>
+                </div>
+            </div>
+
+            <div class="ticket-modal-actions">
+                <button type="button" class="btn-print-ticket" onclick="window.print()">
+                    <ion-icon name="print-outline"></ion-icon> IMPRIMIR / GUARDAR PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Archivo JS Externo -->
+    <script src="{% static 'js/perfil.js' %}?v=5"></script>
+</body>
+
+</html>

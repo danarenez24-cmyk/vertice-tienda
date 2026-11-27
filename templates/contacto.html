@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTÁCTANOS - Vértice</title>
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/contacto.css' %}?v=4">
+
+    <script src="{% static 'js/contacto.js' %}" defer></script>
+</head>
+
+<body>
+
+    <div class="formulario">
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo" class="logo">
+            </a>
+        </div>
+
+        <h2 class="title">CONTÁCTANOS</h2>
+        <p class="subtitle">
+            ¿Tienes alguna duda, sugerencia o problema con tu pedido? Escríbenos y te responderemos a la brevedad.
+        </p>
+
+        <!-- Mensaje de Confirmación -->
+        {% if mensaje_exito %}
+        <div class="success-msg">
+            <i class="fa-solid fa-circle-check"></i> {{ mensaje_exito }}
+        </div>
+        {% endif %}
+
+        <!-- Mensaje de Error -->
+        {% if error %}
+        <div class="error-msg">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'contacto' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="nombre">NOMBRE COMPLETO</label>
+                <input type="text" id="nombre" name="nombre" value="{{ nombre|default:'' }}"
+                    placeholder="Ej. Juan Pérez" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">CORREO ELECTRÓNICO</label>
+                <input type="email" id="email" name="email" value="{{ email|default:'' }}"
+                    placeholder="tuemail@ejemplo.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="telefono">TELÉFONO / WHATSAPP (OPCIONAL)</label>
+                <input type="tel" id="telefono" name="telefono" value="{{ telefono|default:'' }}"
+                    placeholder="+52 123 456 7890">
+            </div>
+
+            <div class="form-group">
+                <label for="date">FECHA DE NACIMIENTO</label>
+                <input type="date" id="date" name="fecha_nacimiento" value="{{ fecha_nacimiento|default:'' }}">
+            </div>
+
+            <div class="form-group">
+                <label for="motivo">MOTIVO DE CONTACTO</label>
+                <select id="motivo" name="motivo" required class="form-select">
+                    <option value="" disabled selected>Selecciona una opción</option>
+                    <option value="Duda sobre un pedido">Duda sobre un pedido</option>
+                    <option value="Devolución o cambio">Devolución o cambio de producto</option>
+                    <option value="Soporte técnico">Soporte técnico con mi cuenta</option>
+                    <option value="Sugerencia">Sugerencia o comentario</option>
+                    <option value="Otro">Otro</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="mensaje">MENSAJE</label>
+                <textarea id="mensaje" name="mensaje" rows="4" maxlength="500"
+                    placeholder="Escribe tu consulta o mensaje en detalle..." required></textarea>
+                <small id="contadorCaracteres">0 / 500 caracteres</small>
+            </div>
+
+            <button type="submit" class="btn-primary">ENVIAR MENSAJE</button>
+
+        </form>
+    </div>
+
+</body>
+
+</html>

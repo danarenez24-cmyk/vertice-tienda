@@ -1,0 +1,588 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración | VÉRTICE</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=27">
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}?v=6">
+
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Header Panel Admin -->
+    <header class="menuprincipal header-admin">
+        <div class="nav-left">
+            <a href="{% url 'inicio' %}" class="btn-volver-tienda">
+                <ion-icon name="storefront-outline"></ion-icon> <span>IR A LA TIENDA</span>
+            </a>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo Vértice" class="logo">
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <span class="user-role-badge">{{ usuario_actual.rol|default:"ADMIN"|upper }}</span>
+            <a href="{% url 'perfil' %}" class="inicio_sesion">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <h1 class="admin-title">PANEL DE CONTROL Y GESTIÓN</h1>
+
+        {% if messages %}
+        <div class="mensajes-contenedor">
+            {% for message in messages %}
+            <div class="alerta alerta-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tarjetas de Métricas -->
+        <div class="admin-stats-grid">
+            <div class="stat-card">
+                <ion-icon name="shirt-outline"></ion-icon>
+                <div>
+                    <h3>{{ total_productos }}</h3>
+                    <p>Productos Activos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <ion-icon name="bag-handle-outline"></ion-icon>
+                <div>
+                    <h3>{{ total_pedidos }}</h3>
+                    <p>Pedidos Registrados</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <ion-icon name="cash-outline"></ion-icon>
+                <div>
+                    <h3>${{ ingresos_totales }} MXN</h3>
+                    <p>Ingresos Generados</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <ion-icon name="people-outline"></ion-icon>
+                <div>
+                    <h3>{{ total_usuarios }}</h3>
+                    <p>Usuarios Registrados</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: Agregar Nueva Prenda -->
+        <section class="admin-section-block">
+            <h2 class="section-title"><ion-icon name="add-circle-outline"></ion-icon> AGREGAR NUEVA PRENDA</h2>
+            <form action="{% url 'admin_crear_producto' %}" method="POST" enctype="multipart/form-data" class="admin-form-grid">
+                {% csrf_token %}
+                <div class="form-group-ck">
+                    <label>Nombre de la Prenda</label>
+                    <input type="text" name="nombre" placeholder="Ej. Playera Oversized Vértice" required>
+                </div>
+                <div class="form-group-ck">
+                    <label>Precio Actual (MXN)</label>
+                    <input type="number" step="0.01" name="precio" placeholder="399.00" required>
+                </div>
+                <div class="form-group-ck">
+                    <label>Precio Original (Opcional)</label>
+                    <input type="number" step="0.01" name="precio_original" placeholder="499.00">
+                </div>
+                <div class="form-group-ck">
+                    <label>Categoría</label>
+                    <select name="categoria" required>
+                        <option value="el">ÉL</option>
+                        <option value="ella">ELLA</option>
+                        <option value="niños">NIÑOS</option>
+                        <option value="fin_año">FIN DE AÑO</option>
+                    </select>
+                </div>
+
+                <div class="form-group-ck full-width">
+                    <label>Fotografía de la Prenda</label>
+                    <div class="media-uploader-grid">
+                        <div class="file-dropzone" id="dropzoneCrear">
+                            <input type="file" name="imagen_archivo" id="crearImagenArchivo" accept="image/*" class="file-dropzone-input">
+                            <div class="dropzone-icon-box">
+                                <ion-icon name="cloud-upload-outline"></ion-icon>
+                            </div>
+                            <img src="" alt="Vista previa" class="dropzone-preview-thumb" id="previewCrearThumb">
+                            <div class="dropzone-text-info">
+                                <span class="dropzone-title" id="dropzoneCrearTitle">Haz clic o arrastra una imagen aquí</span>
+                                <span class="dropzone-subtitle" id="dropzoneCrearSub">PNG, JPG o WEBP (se guarda en el servidor)</span>
+                            </div>
+                        </div>
+
+                        <div class="url-fallback-box">
+                            <label for="crearImagenUrl">O pega una URL / ruta local alternativa</label>
+                            <input type="text" name="imagen_url" id="crearImagenUrl" placeholder="https://... o media/mi_prenda.jpg">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-ck">
+                    <label>Tallas (separadas por coma)</label>
+                    <input type="text" name="tallas" value="S, M, L, XL" required>
+                </div>
+                <div class="form-group-ck">
+                    <label>Stock Disponible (Unidades)</label>
+                    <input type="number" name="stock" min="0" value="15" required>
+                </div>
+                <div class="form-group-ck full-width">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" rows="2" placeholder="Detalles textiles y estilo..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-admin-submit full-width">GUARDAR PRODUCTO</button>
+            </form>
+        </section>
+
+        <!-- SECCIÓN 2: Verificador de Ticket QR en Sucursal -->
+        <section class="admin-section-block">
+            <h2 class="section-title"><ion-icon name="qr-code-outline"></ion-icon> VERIFICAR TICKET QR / ENTREGA EN TIENDA</h2>
+            <div class="qr-verifier-bar">
+                <input type="text" id="inputCodigoQR" placeholder="Escanea el código QR o escribe el folio (Ej. VRT-A1B2C3)..." autocomplete="off">
+                <button type="button" class="btn-admin-submit btn-no-margin" onclick="verificarTicketAdmin()">VERIFICAR TICKET</button>
+            </div>
+            <div id="resultadoVerificacionQR" class="qr-result-box"></div>
+        </section>
+
+        <!-- SECCIÓN 3: Gestión de Pedidos -->
+        <section class="admin-section-block">
+            <h2 class="section-title"><ion-icon name="receipt-outline"></ion-icon> ÚLTIMOS PEDIDOS REGISTRADOS</h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Folio</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Producto</th>
+                            <th>Talla / Cant.</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pedido in ultimos_pedidos %}
+                        <tr>
+                            <td><code class="folio-code">{{ pedido.folio|default:pedido.id_str|slice:":10" }}</code></td>
+                            <td>{{ pedido.fecha }}</td>
+                            <td>{{ pedido.usuario_email }}</td>
+                            <td>{{ pedido.producto_nombre }}</td>
+                            <td>{{ pedido.talla }} (x{{ pedido.cantidad }})</td>
+                            <td><strong>${{ pedido.total }} MXN</strong></td>
+                            <td><span class="status-badge status-{{ pedido.estado|lower }}">{{ pedido.estado }}</span></td>
+                            <td>
+                                <form action="{% url 'admin_cambiar_estado_pedido' pedido.id_str %}" method="POST" class="inline-form">
+                                    {% csrf_token %}
+                                    <select name="estado" onchange="this.form.submit()" class="select-sm">
+                                        <option value="Procesando" {% if pedido.estado == "Procesando" %}selected{% endif %}>Procesando</option>
+                                        <option value="Enviado" {% if pedido.estado == "Enviado" %}selected{% endif %}>Enviado</option>
+                                        <option value="Entregado" {% if pedido.estado == "Entregado" %}selected{% endif %}>Entregado</option>
+                                        <option value="Cancelado" {% if pedido.estado == "Cancelado" %}selected{% endif %}>Cancelado</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8" class="table-empty-cell">No hay pedidos en el sistema.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 4: Catálogo de Productos Actuales -->
+        <section class="admin-section-block">
+            <h2 class="section-title"><ion-icon name="grid-outline"></ion-icon> CATÁLOGO ACTUAL</h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prod in productos %}
+                        <tr>
+                            <td>
+                                <img src="{{ prod.imagen_url }}"
+                                     data-fallback="{% static 'media/logo1.png' %}"
+                                     onerror="this.onerror=null; this.src=this.dataset.fallback;"
+                                     alt="{{ prod.nombre }}"
+                                     class="prod-thumb">
+                            </td>
+                            <td><strong>{{ prod.nombre }}</strong></td>
+                            <td>{{ prod.categoria|upper }}</td>
+                            <td>${{ prod.precio }} MXN</td>
+                            <td>
+                                {% if prod.stock_numerico == 0 %}
+                                    <span class="status-badge status-cancelado">AGOTADO (0)</span>
+                                {% elif prod.stock_numerico != None %}
+                                    <span class="status-badge status-entregado">{{ prod.stock_numerico }} uds.</span>
+                                {% else %}
+                                    <span class="status-badge status-entregado">Disponible</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-btns-group">
+                                    <button type="button"
+                                            class="btn-edit-sm"
+                                            title="Editar prenda"
+                                            data-action="{% url 'admin_editar_producto' prod.id_str %}"
+                                            data-nombre="{{ prod.nombre }}"
+                                            data-precio="{{ prod.precio }}"
+                                            data-precio-original="{{ prod.precio_original|default:'' }}"
+                                            data-categoria="{{ prod.categoria|default:'el' }}"
+                                            data-imagen="{{ prod.imagen_url }}"
+                                            data-tallas="{{ prod.tallas_str }}"
+                                            data-stock="{% if prod.es_stock_por_talla %}{% else %}{{ prod.stock_numerico|default:'' }}{% endif %}"
+                                            data-stock-talla="{% if prod.es_stock_por_talla %}1{% else %}0{% endif %}"
+                                            data-descripcion="{{ prod.descripcion|default:'' }}"
+                                            onclick="abrirModalEditarProducto(this)">
+                                        <ion-icon name="create-outline"></ion-icon> Editar
+                                    </button>
+
+                                    <form action="{% url 'admin_eliminar_producto' prod.id_str %}" method="POST" onsubmit="return confirm('¿Eliminar esta prenda del catálogo?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-danger-sm" title="Eliminar prenda"><ion-icon name="trash-outline"></ion-icon></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 5: Bandeja de Mensajes de Contacto -->
+        <section class="admin-section-block">
+            <h2 class="section-title">
+                <ion-icon name="mail-unread-outline"></ion-icon> MENSAJES DE CONTACTO DE CLIENTES
+                {% if mensajes_pendientes > 0 %}
+                <span class="badge-pendientes-count">{{ mensajes_pendientes }} pendiente{{ mensajes_pendientes|pluralize }}</span>
+                {% endif %}
+            </h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Motivo</th>
+                            <th>Mensaje</th>
+                            <th>Estatus</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for msg in mensajes_contacto %}
+                        <tr>
+                            <td>{{ msg.fecha_formateada }}</td>
+                            <td>
+                                <strong>{{ msg.nombre }}</strong>
+                                <span class="client-contact-meta">{{ msg.email }}</span>
+                                {% if msg.telefono %}<span class="client-contact-phone">Tel: {{ msg.telefono }}</span>{% endif %}
+                            </td>
+                            <td><strong>{{ msg.motivo }}</strong></td>
+                            <td><div class="msg-preview-text">{{ msg.mensaje }}</div></td>
+                            <td>
+                                <span class="status-badge {% if msg.estatus == 'Atendido' %}status-entregado{% else %}status-procesando{% endif %}">
+                                    {{ msg.estatus|default:"Pendiente" }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-btns-group">
+                                    <form action="{% url 'admin_cambiar_estatus_contacto' msg.id_str %}" method="POST" class="inline-form">
+                                        {% csrf_token %}
+                                        <select name="estatus" onchange="this.form.submit()" class="select-sm">
+                                            <option value="Pendiente" {% if msg.estatus == "Pendiente" or not msg.estatus %}selected{% endif %}>Pendiente</option>
+                                            <option value="Atendido" {% if msg.estatus == "Atendido" %}selected{% endif %}>Atendido</option>
+                                        </select>
+                                    </form>
+                                    <form action="{% url 'admin_eliminar_contacto' msg.id_str %}" method="POST" onsubmit="return confirm('¿Eliminar este mensaje?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-danger-sm" title="Eliminar mensaje"><ion-icon name="trash-outline"></ion-icon></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="table-empty-cell">No hay mensajes de contacto registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 6: Gestión de Roles (Solo Superadmin) -->
+        {% if usuario_actual.rol == 'superadmin' %}
+        <section class="admin-section-block">
+            <h2 class="section-title"><ion-icon name="shield-half-outline"></ion-icon> GESTIÓN DE ROLES DE USUARIOS</h2>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th>Rol Actual</th>
+                            <th>Cambiar Rol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr>
+                            <td>{{ u.nombre }} {{ u.apellidos }}</td>
+                            <td>{{ u.email }}</td>
+                            <td><span class="role-pill">{{ u.rol|default:"cliente"|upper }}</span></td>
+                            <td>
+                                <form action="{% url 'admin_cambiar_rol_usuario' u.id_str %}" method="POST" class="inline-form">
+                                    {% csrf_token %}
+                                    <select name="rol" onchange="this.form.submit()" class="select-sm">
+                                        <option value="cliente" {% if u.rol == "cliente" or not u.rol %}selected{% endif %}>Cliente</option>
+                                        <option value="admin" {% if u.rol == "admin" %}selected{% endif %}>Admin</option>
+                                        <option value="superadmin" {% if u.rol == "superadmin" %}selected{% endif %}>Superadmin</option>
+                                    </select>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <!-- MODAL EDITAR PRODUCTO -->
+    <div id="modalEditarProducto" class="admin-modal-overlay" onclick="cerrarModalEditarProducto(event)">
+        <div class="admin-modal-card" onclick="event.stopPropagation()">
+            <button type="button" class="admin-modal-close" onclick="cerrarModalEditarProducto()">&times;</button>
+            <h2 class="section-title modal-section-title"><ion-icon name="create-outline"></ion-icon> EDITAR PRENDA</h2>
+
+            <form id="formEditarProducto" method="POST" enctype="multipart/form-data" class="admin-form-grid">
+                {% csrf_token %}
+                <div class="form-group-ck">
+                    <label>Nombre de la Prenda</label>
+                    <input type="text" name="nombre" id="editNombre" required>
+                </div>
+                <div class="form-group-ck">
+                    <label>Categoría</label>
+                    <select name="categoria" id="editCategoria" required>
+                        <option value="el">ÉL</option>
+                        <option value="ella">ELLA</option>
+                        <option value="niños">NIÑOS</option>
+                        <option value="fin_año">FIN DE AÑO</option>
+                    </select>
+                </div>
+                <div class="form-group-ck">
+                    <label>Precio Actual (MXN)</label>
+                    <input type="number" step="0.01" name="precio" id="editPrecio" required>
+                </div>
+                <div class="form-group-ck">
+                    <label>Precio Original (Opcional)</label>
+                    <input type="number" step="0.01" name="precio_original" id="editPrecioOriginal">
+                </div>
+                <div class="form-group-ck">
+                    <label>Tallas (separadas por coma)</label>
+                    <input type="text" name="tallas" id="editTallas" required>
+                </div>
+                <div class="form-group-ck" id="editStockWrapper">
+                    <label>Stock Disponible (Unidades)</label>
+                    <input type="number" name="stock" id="editStock" min="0">
+                </div>
+
+                <div class="form-group-ck full-width">
+                    <label>Fotografía de la Prenda</label>
+                    <div class="media-uploader-grid">
+                        <div class="file-dropzone" id="dropzoneEditar">
+                            <input type="file" name="imagen_archivo" id="editImagenArchivo" accept="image/*" class="file-dropzone-input">
+                            <div class="dropzone-icon-box">
+                                <ion-icon name="image-outline"></ion-icon>
+                            </div>
+                            <img src="" alt="Vista previa" class="dropzone-preview-thumb" id="previewEditarThumb">
+                            <div class="dropzone-text-info">
+                                <span class="dropzone-title" id="dropzoneEditarTitle">Cambiar fotografía (Opcional)</span>
+                                <span class="dropzone-subtitle" id="dropzoneEditarSub">Arrastra o selecciona una nueva imagen</span>
+                            </div>
+                        </div>
+
+                        <div class="url-fallback-box">
+                            <label for="editImagenUrl">URL o Ruta de Imagen Actual</label>
+                            <input type="text" name="imagen_url" id="editImagenUrl">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group-ck full-width">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" id="editDescripcion" rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="btn-admin-submit full-width">GUARDAR CAMBIOS</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function inicializarDropzone(dropzoneId, inputId, thumbId, titleId, subId) {
+            const dropzone = document.getElementById(dropzoneId);
+            const input = document.getElementById(inputId);
+            const thumb = document.getElementById(thumbId);
+            const title = document.getElementById(titleId);
+            const sub = document.getElementById(subId);
+            if (!dropzone || !input) return;
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                dropzone.addEventListener(evt, () => dropzone.classList.add('is-dragover'));
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                dropzone.addEventListener(evt, () => dropzone.classList.remove('is-dragover'));
+            });
+
+            input.addEventListener('change', function () {
+                const archivo = this.files && this.files[0];
+                if (!archivo) return;
+
+                dropzone.classList.add('has-file');
+                title.textContent = archivo.name;
+                sub.textContent = `${(archivo.size / 1024).toFixed(1)} KB • Lista para guardar`;
+
+                const reader = new FileReader();
+                reader.onload = (e) => { thumb.src = e.target.result; };
+                reader.readAsDataURL(archivo);
+            });
+        }
+
+        inicializarDropzone('dropzoneCrear', 'crearImagenArchivo', 'previewCrearThumb', 'dropzoneCrearTitle', 'dropzoneCrearSub');
+        inicializarDropzone('dropzoneEditar', 'editImagenArchivo', 'previewEditarThumb', 'dropzoneEditarTitle', 'dropzoneEditarSub');
+
+        function abrirModalEditarProducto(btn) {
+            const modal = document.getElementById('modalEditarProducto');
+            const form = document.getElementById('formEditarProducto');
+
+            form.action = btn.dataset.action;
+            document.getElementById('editNombre').value = btn.dataset.nombre || '';
+            document.getElementById('editCategoria').value = btn.dataset.categoria || 'el';
+            document.getElementById('editPrecio').value = btn.dataset.precio || '';
+            document.getElementById('editPrecioOriginal').value = btn.dataset.precioOriginal || '';
+            document.getElementById('editTallas').value = btn.dataset.tallas || 'S, M, L, XL';
+            document.getElementById('editImagenUrl').value = btn.dataset.imagen || '';
+            document.getElementById('editDescripcion').value = btn.dataset.descripcion || '';
+
+            // Mostrar la imagen actual como vista previa inicial en el modal
+            const dropzoneEditar = document.getElementById('dropzoneEditar');
+            const previewEditar = document.getElementById('previewEditarThumb');
+            document.getElementById('editImagenArchivo').value = '';
+            if (btn.dataset.imagen) {
+                dropzoneEditar.classList.add('has-file');
+                previewEditar.src = btn.dataset.imagen;
+                document.getElementById('dropzoneEditarTitle').textContent = 'Fotografía actual cargada';
+                document.getElementById('dropzoneEditarSub').textContent = 'Haz clic o arrastra otra imagen para reemplazarla';
+            } else {
+                dropzoneEditar.classList.remove('has-file');
+                previewEditar.src = '';
+            }
+
+            const stockWrapper = document.getElementById('editStockWrapper');
+            const stockInput = document.getElementById('editStock');
+            if (btn.dataset.stockTalla === '1') {
+                stockWrapper.style.display = 'none';
+                stockInput.value = '';
+            } else {
+                stockWrapper.style.display = '';
+                stockInput.value = btn.dataset.stock || '';
+            }
+
+            modal.classList.add('open');
+        }
+
+        function cerrarModalEditarProducto(event) {
+            if (!event || event.target.id === 'modalEditarProducto') {
+                document.getElementById('modalEditarProducto').classList.remove('open');
+            }
+        }
+
+        async function verificarTicketAdmin(marcarEntregado = false) {
+            const input = document.getElementById('inputCodigoQR');
+            const box = document.getElementById('resultadoVerificacionQR');
+            const codigo = input.value.trim();
+            if (!codigo) return;
+
+            const formData = new FormData();
+            formData.append('codigo', codigo);
+            if (marcarEntregado) formData.append('accion', 'marcar_entregado');
+
+            const resp = await fetch("{% url 'admin_verificar_ticket' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            });
+            const data = await resp.json();
+
+            box.style.display = 'block';
+            if (!data.ok) {
+                box.innerHTML = `<p class="qr-error-msg">✕ ${data.error}</p>`;
+                return;
+            }
+
+            const p = data.pedido;
+            const esEntregado = p.estado === 'Entregado';
+            box.innerHTML = `
+                <div class="qr-verified-grid">
+                    <div>
+                        <span class="status-badge ${esEntregado ? 'status-entregado' : 'status-procesando'}">TICKET AUTÉNTICO • ${p.estado.toUpperCase()}</span>
+                        <h3 class="qr-ticket-title">${p.folio} — ${p.producto}</h3>
+                        <p class="qr-ticket-meta">Cliente: <strong>${p.cliente}</strong> | Talla: <strong>${p.talla}</strong> (x${p.cantidad}) | Total: <strong>$${p.total} MXN</strong></p>
+                    </div>
+                    ${!esEntregado ? `<button type="button" class="btn-admin-submit btn-no-margin" onclick="verificarTicketAdmin(true)">CONFIRMAR ENTREGA</button>` : `<span class="qr-delivered-label">✓ Pedido ya entregado</span>`}
+                </div>
+            `;
+        }
+
+        document.getElementById('inputCodigoQR')?.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verificarTicketAdmin();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

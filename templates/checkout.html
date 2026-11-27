@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout y Pago | VÉRTICE</title>
+
+    <!-- Fuente Montserrat y Estilos Separados -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=16">
+    <link rel="stylesheet" href="{% static 'css/checkout.css' %}?v=2">
+
+    <!-- Script JS dedicado -->
+    <script src="{% static 'js/checkout.js' %}" defer></script>
+
+    <!-- Iconos IonIcons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Header Minimalista de Pago -->
+    <header class="menuprincipal header-checkout">
+        <div class="nav-left">
+            <a href="{% url 'inicio' %}" class="btn-volver-tienda">
+                <ion-icon name="arrow-back-outline"></ion-icon> SEGUIR COMPRANDO
+            </a>
+        </div>
+
+        <div class="nav-right">
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion" style="text-decoration: none; color: inherit;">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="checkout-container">
+        <h1 class="checkout-page-title">PROCESO DE PAGO</h1>
+
+        {% if messages %}
+        <div class="mensajes-contenedor">
+            {% for message in messages %}
+            <div class="alerta alerta-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form action="{% url 'procesar_pago' %}" method="POST" id="form-checkout">
+            {% csrf_token %}
+
+            <div class="checkout-grid">
+
+                <!-- Columna Izquierda: Formulario de Envío y Método de Pago -->
+                <div class="checkout-col-main">
+
+                    <!-- PASO 1: Dirección de Envío -->
+                    <section class="checkout-block">
+                        <div class="block-header">
+                            <span class="step-num">01</span>
+                            <h2>DIRECCIÓN DE ENVÍO</h2>
+                        </div>
+
+                        <div class="form-row-2">
+                            <div class="form-group-ck">
+                                <label for="nombre">Nombre</label>
+                                <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required>
+                            </div>
+                            <div class="form-group-ck">
+                                <label for="apellidos">Apellidos</label>
+                                <input type="text" id="apellidos" name="apellidos" value="{{ usuario.apellidos }}" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group-ck">
+                            <label for="direccion">Calle, Número exterior e interior</label>
+                            <input type="text" id="direccion" name="direccion" placeholder="Ej. Calle Torre Satélite #12, Int 4" required>
+                        </div>
+
+                        <div class="form-row-2">
+                            <div class="form-group-ck">
+                                <label for="codigo_postal">Código Postal</label>
+                                <input type="text" id="codigo_postal" name="codigo_postal" placeholder="54743" maxlength="5" required>
+                            </div>
+                            <div class="form-group-ck">
+                                <label for="ciudad_estado">Ciudad / Estado</label>
+                                <input type="text" id="ciudad_estado" name="ciudad_estado" value="Cuautitlán Izcalli, Estado de México" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group-ck">
+                            <label for="telefono">Teléfono de contacto</label>
+                            <input type="tel" id="telefono" name="telefono" placeholder="5512345678" maxlength="10" pattern="[0-9]{10}" title="Ingresa un número telefónico válido a 10 dígitos" required>
+                        </div>
+                    </section>
+
+                    <!-- PASO 2: Selección / Ingreso de Tarjeta -->
+                    <section class="checkout-block">
+                        <div class="block-header">
+                            <span class="step-num">02</span>
+                            <h2>MÉTODO DE PAGO</h2>
+                        </div>
+
+                        {% if tarjetas %}
+                        <div class="selector-tarjetas-guardadas">
+                            <label class="label-section">Selecciona una de tus tarjetas guardadas:</label>
+
+                            <div class="grid-tarjetas-opciones">
+                                {% for tarjeta in tarjetas %}
+                                <label class="tarjeta-opcion-card">
+                                    <input type="radio" name="metodo_pago" value="Tarjeta {{ tarjeta.marca }} **** {{ tarjeta.ultimos_4 }}" {% if forloop.first %}checked{% endif %} class="radio-tarjeta-input">
+                                    <div class="tarjeta-opcion-body">
+                                        <div class="top-brand">
+                                            <span class="brand-tag">{{ tarjeta.marca|upper }}</span>
+                                            <span class="last-digits">•••• {{ tarjeta.ultimos_4 }}</span>
+                                        </div>
+                                        <p class="holder">{{ tarjeta.titular }}</p>
+                                        <p class="exp">Exp: {{ tarjeta.expiracion }}</p>
+                                    </div>
+                                </label>
+                                {% endfor %}
+
+                                <label class="tarjeta-opcion-card nueva-tarjeta-option">
+                                    <input type="radio" name="metodo_pago" value="nueva_tarjeta" id="radio-nueva-tarjeta" class="radio-tarjeta-input">
+                                    <div class="tarjeta-opcion-body">
+                                        <ion-icon name="add-circle-outline"></ion-icon>
+                                        <span>Usar otra tarjeta</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        {% else %}
+                        <input type="hidden" name="metodo_pago" value="nueva_tarjeta">
+                        {% endif %}
+
+                        <!-- Formulario de Tarjeta Manual -->
+                        <div id="seccion-nueva-tarjeta" class="{% if tarjetas %}oculto{% endif %}">
+                            <div class="form-group-ck">
+                                <label for="num_tarjeta">Número de Tarjeta</label>
+                                <input type="text" id="num_tarjeta" name="num_tarjeta" placeholder="1234 5678 9101 1121" maxlength="19">
+                            </div>
+
+                            <div class="form-group-ck">
+                                <label for="titular_tarjeta">Nombre del Titular</label>
+                                <input type="text" id="titular_tarjeta" name="titular_tarjeta" placeholder="EJ. DANIEL ARELLANO" style="text-transform: uppercase;">
+                            </div>
+
+                            <div class="form-row-2">
+                                <div class="form-group-ck">
+                                    <label for="exp_tarjeta">Vencimiento (MM/AA)</label>
+                                    <input type="text" id="exp_tarjeta" name="exp_tarjeta" placeholder="12/28" maxlength="5">
+                                </div>
+                                <div class="form-group-ck">
+                                    <label for="cvv_tarjeta">CVV</label>
+                                    <input type="password" id="cvv_tarjeta" name="cvv_tarjeta" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+
+                            <label class="checkbox-guardar" style="display: flex; align-items: center; gap: 8px; font-size: 12px; margin-top: 10px; cursor: pointer;">
+                                <input type="checkbox" name="guardar_tarjeta_checkout" value="1">
+                                <span>Guardar esta tarjeta para futuras compras</span>
+                            </label>
+                        </div>
+
+                    </section>
+
+                </div>
+
+                <!-- Columna Derecha: Resumen de Artículos, Cupones y Total -->
+                <aside class="checkout-col-summary">
+                    <div class="checkout-block summary-box">
+                        <h2 class="summary-title">RESUMEN DE TU COMPRA</h2>
+
+                        {% if items %}
+                        <!-- Barra informativa de Envío Gratis -->
+                        <div style="background: #f8f8f8; border: 1px solid #e5e5e5; border-radius: 6px; padding: 11px 14px; margin-bottom: 16px; font-size: 11.5px;">
+                            {% if envio == 0 %}
+                                <p style="margin: 0; color: #16a34a; font-weight: 700;">¡Felicidades! Tu pedido cuenta con ENVÍO GRATIS.</p>
+                            {% else %}
+                                <p style="margin: 0; color: #222222;">Agrega <b>${{ faltante_envio_gratis }} MXN</b> más para obtener <b>ENVÍO GRATIS</b>.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="lista-items-checkout">
+                            {% for item in items %}
+                            <div class="checkout-item-row">
+                                <img src="{{ item.imagen }}" alt="{{ item.nombre }}" onerror="this.src='/static/media/logo1.png'">
+
+                                <div class="item-info">
+                                    <h3>{{ item.nombre }}</h3>
+                                    <p class="item-meta">Talla: <strong>{{ item.talla }}</strong> | Cantidad: <strong>{{ item.cantidad }}</strong></p>
+                                    <span class="item-price">${{ item.precio }} MXN</span>
+                                </div>
+
+                                <a href="{% url 'eliminar_item_carrito' item.producto_id item.talla %}" class="btn-eliminar-item" title="Eliminar este artículo">
+                                    <ion-icon name="trash-outline"></ion-icon>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Caja de Código Promocional -->
+                        <div class="cupon-box" style="margin: 16px 0; padding: 14px; background: #f8f8f8; border-radius: 6px; border: 1px solid #e5e5e5;">
+                            <label for="inputCodigoCupon" style="display:block; font-size:11px; font-weight:700; letter-spacing:0.8px; margin-bottom:8px; color:#111111;">CÓDIGO PROMOCIONAL</label>
+                            <div style="display:flex; gap:8px;">
+                                <input type="text" id="inputCodigoCupon" value="{{ codigo_cupon|default:'' }}" placeholder="Ej. VERTICE10" style="flex:1; padding:10px; border:1px solid #cccccc; border-radius:4px; font-size:12px; text-transform:uppercase; font-family:'Montserrat', sans-serif;">
+                                <button type="button" onclick="aplicarCuponCheckout()" style="padding:10px 16px; background:#111111; color:#ffffff; border:none; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; letter-spacing:0.8px;">APLICAR</button>
+                            </div>
+                            <p id="mensajeCupon" style="font-size:11px; margin:6px 0 0; color:#16a34a;">
+                                {% if codigo_cupon %}Cupón <b>{{ codigo_cupon }}</b> aplicado (-{{ porcentaje_cupon }}%){% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Cuentas Totales en Tiempo Real -->
+                        <div class="totales-breakdown">
+                            <div class="linea-total">
+                                <span>Subtotal</span>
+                                <span>${{ subtotal }} MXN</span>
+                            </div>
+
+                            {% if descuento > 0 %}
+                            <div class="linea-total" style="color: #16a34a; font-weight: 600;">
+                                <span>Descuento ({{ codigo_cupon }} -{{ porcentaje_cupon }}%)</span>
+                                <span>-${{ descuento }} MXN</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="linea-total">
+                                <span>Envío estimado</span>
+                                {% if envio == 0 %}
+                                    <span class="envio-gratis" style="color: #16a34a; font-weight: 700;">GRATIS</span>
+                                {% else %}
+                                    <span>${{ envio }} MXN</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="linea-total total-final">
+                                <span>TOTAL A PAGAR</span>
+                                <span>${{ total }} MXN</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-confirmar-pago">
+                            PAGAR ${{ total }} MXN
+                        </button>
+                        {% else %}
+                        <div class="carrito-vacio-box">
+                            <ion-icon name="bag-handle-outline"></ion-icon>
+                            <p>No tienes artículos en tu carrito.</p>
+                            <a href="{% url 'inicio' %}" class="btn-volver-tienda-link">VER CATÁLOGO DE PRENDAS</a>
+                        </div>
+                        {% endif %}
+
+                        <div class="garantia-pago">
+                            <p><ion-icon name="shield-checkmark-outline"></ion-icon> Transacción 100% encriptada y segura.</p>
+                        </div>
+                    </div>
+                </aside>
+
+            </div>
+        </form>
+    </main>
+
+    <script>
+        async function aplicarCuponCheckout() {
+            const input = document.getElementById('inputCodigoCupon');
+            const msg = document.getElementById('mensajeCupon');
+            const codigo = (input.value || '').trim();
+            if (!codigo) return;
+
+            try {
+                const resp = await fetch(`/api/cupon/validar/?codigo=${encodeURIComponent(codigo)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const data = await resp.json();
+                if (!data.ok) {
+                    msg.style.color = '#e11d48';
+                    msg.textContent = data.error;
+                } else {
+                    msg.style.color = '#16a34a';
+                    msg.textContent = data.mensaje;
+                    window.location.reload();
+                }
+            } catch (e) {
+                msg.style.color = '#e11d48';
+                msg.textContent = 'No se pudo validar el cupón en este momento.';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

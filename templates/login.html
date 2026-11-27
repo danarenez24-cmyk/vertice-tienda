@@ -1,0 +1,225 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if paso == 2 %}Verificar código
+        {% elif paso == 3 %}Completa tu registro
+        {% else %}Crear cuenta o Iniciar sesión{% endif %}
+    </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}?v=10">
+    <script src="{% static 'js/login.js' %}?v=6" defer></script>
+    <script src="https://accounts.google.com/gsi/client" defer></script>
+</head>
+
+<body>
+
+    <div class="login-container">
+
+        <!-- Columna Izquierda: Formulario -->
+        <div class="login-form-section">
+            <div class="login-content">
+
+                {% if paso == 2 %}
+                <!-- PASO 2: CÓDIGO DE VERIFICACIÓN -->
+                <a href="{% url 'login' %}" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+
+                <div class="nav-center">
+                    <a href="{% url 'inicio' %}" class="enlace-logo">
+                        <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo" class="logo">
+                    </a>
+                </div>
+
+                <h2 class="title">CÓDIGO DE VERIFICACIÓN</h2>
+                <p class="subtitle">Enviamos un código de 6 dígitos a <strong>{{ email }}</strong>. Agrégalo para
+                    verificar tu correo.</p>
+
+                {% if error %}
+                <p class="error-msg">{{ error }}</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="paso" value="2">
+                    <input type="hidden" name="email" value="{{ email }}">
+
+                    <div class="form-group">
+                        <label for="codigo">CÓDIGO DE 6 DÍGITOS</label>
+                        <input type="text" id="codigo" name="codigo" maxlength="6" placeholder="123456" required
+                            autofocus style="letter-spacing: 6px; font-size: 18px; text-align: center;">
+                    </div>
+
+                    <button type="submit" class="btn-primary">VERIFICAR CÓDIGO</button>
+                </form>
+
+                {% elif paso == 3 %}
+                <!-- PASO 3: NOMBRE Y APELLIDOS -->
+                <a href="{% url 'login' %}" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+
+                <div class="nav-center">
+                    <a href="{% url 'inicio' %}" class="enlace-logo">
+                        <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo" class="logo">
+                    </a>
+                </div>
+
+                <h2 class="title">COMPLETA TU REGISTRO</h2>
+                <p class="subtitle">Necesitamos más información sobre ti para crear tu cuenta de Vértice.</p>
+
+                {% if error %}
+                <p class="error-msg">{{ error }}</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="paso" value="3">
+                    <input type="hidden" name="email" value="{{ email }}">
+
+                    <div class="form-group">
+                        <label for="email_display">EMAIL</label>
+                        <input type="email" id="email_display" value="{{ email }}" disabled readonly
+                            class="input-disabled">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nombre">NOMBRE</label>
+                        <input type="text" id="nombre" name="nombre" placeholder="Escribe tu nombre" required autofocus>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="apellidos">APELLIDOS</label>
+                        <input type="text" id="apellidos" name="apellidos" placeholder="Escribe tus apellidos" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary">CREAR CUENTA</button>
+                </form>
+
+                {% else %}
+                <!-- PASO 1: CORREO, CONTRASEÑA Y TÉRMINOS -->
+                <div class="nav-center">
+                    <a href="{% url 'inicio' %}" class="enlace-logo">
+                        <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo" class="logo">
+                    </a>
+                </div>
+
+                <h2 class="title">CREAR CUENTA O INICIAR SESIÓN</h2>
+
+                {% if error %}
+                <p class="error-msg">{{ error }}</p>
+                {% endif %}
+
+                <form method="POST" action="{% url 'login' %}" id="formStep1">
+                    {% csrf_token %}
+                    <input type="hidden" name="paso" value="1">
+
+                    <div class="form-group">
+                        <label for="email">EMAIL</label>
+                        <input type="email" id="email" name="email" value="{{ email|default:'' }}"
+                            placeholder="tuemail@ejemplo.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="passwordInput">CONTRASEÑA (MÍN. 8 CARACTERES)</label>
+                        <div class="campo-password">
+                            <input type="password" id="passwordInput" name="password" minlength="8"
+                                placeholder="Escribe una contraseña segura" required>
+                            <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                        </div>
+                    </div>
+
+                    <!-- CHECKBOX DE TÉRMINOS Y CONDICIONES -->
+                    <div class="form-group checkbox-container">
+                        <label class="checkbox-custom">
+                            <input type="checkbox" name="acepta_terminos" id="acepta_terminos" value="1">
+                            <span>Acepto la <a href="{% url 'politica_privacidad' %}"><strong>Política de
+                                        privacidad</strong></a> y los <a href="{% url 'politica_de_uso' %}"
+                                    target="_blank"><strong>Términos de uso</a> de Vértice.</strong></span>
+                        </label>
+                        <small class="field-error" id="error-terminos"
+                            style="display:none; color: #e02424; font-size: 11px; margin-top: 5px; font-weight: 600;"></small>
+                    </div>
+
+                    <button type="submit" class="btn-primary">CONTINUAR</button>
+                </form>
+
+                <div class="divider">ACCEDER CON</div>
+
+                <div class="social-login">
+                    <a href="javascript:void(0)" class="btn-social" onclick="abrirModalQR()">
+                        <i class="fa-solid fa-qrcode"></i>
+                        <span>CONTINUAR CON QR</span>
+                    </a>
+
+                    <div class="social-login">
+                        <a href="javascript:void(0)" class="btn-social" onclick="abrirModalQR()">
+                            <i class="fa-solid fa-qrcode"></i>
+                            <span>CONTINUAR CON QR</span>
+                        </a>
+
+                        <!-- Botón Oficial Google Identity (Funciona en Local y en Render) -->
+                        <div id="g_id_onload"
+                            data-client_id="382398764900-6otetq3jppn56hgb7ugc2amuctudt89a.apps.googleusercontent.com"
+                            data-context="signin" data-ux_mode="redirect" data-login_uri="" data-auto_prompt="false">
+                        </div>
+
+                        <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+                            data-text="continue_with" data-size="large" data-logo_alignment="center" data-width="340">
+                        </div>
+                    </div>
+
+                </div>
+
+                <p class="terms">
+                    Al continuar aceptas la <a href="#">Política de privacidad</a> y los <a href="#">Términos de
+                        uso</a>.
+                </p>
+                {% endif %}
+
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Imagen -->
+        <div class="login-image-section">
+            <img src="{% static 'media/mujer.jpg' %}" alt="Vertice Fashion">
+        </div>
+
+    </div>
+
+    <!-- Modal QR -->
+    <div id="modalQR" class="modal-qr-backdrop" style="display: none;">
+        <div class="modal-qr-box">
+            <span class="cerrar-modal" onclick="cerrarModalQR()">&times;</span>
+            <h3 style="margin-top:0;">INICIAR SESIÓN CON QR</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">
+                Escanea este código con la cámara de tu celular para ingresar sin escribir datos.
+            </p>
+
+            <div id="qrImageContainer"
+                style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                <p>Generando código QR...</p>
+            </div>
+
+            <p style="font-size: 11px; color: #999; margin-top: 15px;">
+                El código se verifica en tiempo real.
+            </p>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('g_id_onload').setAttribute(
+        'data-login_uri',
+        window.location.origin + "{% url 'google_login' %}"
+    );
+
+    </script>
+
+</body>
+
+</html>

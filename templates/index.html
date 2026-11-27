@@ -1,0 +1,279 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | VÉRTICE</title>
+
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=27">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=28"> 
+    <link rel="stylesheet" href="{% static 'css/estilista_ia.css' %}?v=2">
+<script src="{% static 'js/estilista_ia.js' %}?v=1" defer></script>
+    <script src="{% static 'js/global.js' %}?v=26" defer></script>
+    <script src="{% static 'js/acciones.js' %}?v=6" defer></script>
+
+    <!-- Iconos -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body>
+
+    <!-- Navegador Fijo (Siempre visible) -->
+    <header class="menuprincipal">
+
+        <!-- Menú hamburguesa -->
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo de la marca" class="logo">
+            </a>
+        </div>
+
+        <!-- Usuario, Carrito y Formulario de Búsqueda -->
+        <div class="nav-right">
+            <form action="{% url 'inicio' %}" method="GET" class="search-box-wrapper">
+                <button type="submit" class="btn-search-icon">
+                    <ion-icon name="search-outline" class="search-icon"></ion-icon>
+                </button>
+                <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Buscar productos..." autocomplete="off">
+            </form>
+
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper" title="Ver Carrito y Pagar">
+                <ion-icon name="bag-handle-outline" class="icono-bag"></ion-icon>
+            </a>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion" style="text-decoration: none; color: inherit;">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+
+    </header>
+
+    {% if not query %}
+    <!-- Portada Principal (Se oculta al realizar una búsqueda) -->
+    <section class="portada">
+        <img src="{% static 'media/portada1.1.png' %}" alt="Imagen de Portada">
+        <section class="lema">
+            <h6>TU ESTILO,</h6>
+            <h6>SIN LÍMITES</h6>
+        </section>
+    </section>
+
+    <!-- Portada Secundaria (Se oculta al realizar una búsqueda) -->
+    <section class="portada2">
+        <img src="{% static 'media/portada2.2.png' %}" alt="portada 2">
+        <a href="{% url 'el' %}" class="ver_mas">Ver Más</a>
+    </section>
+    {% endif %}
+
+    <!-- Overlay -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <!-- Menú hamburguesa (Categorías) -->
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <!-- Menú lateral de Cuenta -->
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+
+        {% if request.session.usuario_nombre %}
+            {% if request.session.usuario_rol == 'admin' or request.session.usuario_rol == 'superadmin' %}
+            <a href="{% url 'admin_dashboard' %}" style="font-weight: 700; color: #000; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 5px;">PANEL DE ADMINISTRACIÓN</a>
+            {% endif %}
+            <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+            <a href="{% url 'logout' %}" style="color: #d9534f;">CERRAR SESIÓN</a>
+        {% else %}
+            <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+            <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Sección de Productos Filtrados o Destacados -->
+    <div class="carrusel-contenedor {% if query %}seccion-solo-resultados{% endif %}" id="seccionCarrusel">
+        <div class="carrusel-header-info">
+            <h3 class="carrusel-titulo">
+                {% if query %}
+                    RESULTADOS DE BÚSQUEDA
+                {% else %}
+                    COLECCIÓN DESTACADA
+                {% endif %}
+            </h3>
+            <p class="carrusel-sub" id="contadorResultados">
+                {% if query %}
+                    Mostrando {{ productos|length }} de {{ productos.paginator.count }} resultado(s) para "{{ query }}" &nbsp;—&nbsp; <a href="{% url 'inicio' %}" class="link-limpiar-busqueda">Ver colección completa</a>
+                {% else %}
+                    Mostrando {{ productos|length }} de {{ productos.paginator.count }} productos
+                {% endif %}
+            </p>
+        </div>
+
+        <button class="flecha flecha-izquierda" onclick="moverCarrusel(-1)">&#10094;</button>
+
+        <div class="carrusel-track" id="carruselTrack">
+
+            {% for producto in productos %}
+            <article class="tarjeta-producto card-producto" 
+                 data-nombre="{{ producto.nombre|default:''|lower }}" 
+                 data-categoria="{{ producto.categoria|default:''|lower }}">
+                
+                <div class="imagen-contenedor">
+                    <button type="button" class="btn-wishlist-index" data-producto-id="{{ producto.id_str }}" title="Guardar en favoritos" onclick="toggleFavorito(this)">
+                        <ion-icon name="heart-outline"></ion-icon>
+                    </button>
+
+                    {% if producto.agotado or producto.stock == 0 %}
+                    <span class="badge-agotado-index">AGOTADO</span>
+                    {% endif %}
+
+                    <a href="{% url 'detalle_producto' producto.id_str %}" class="enlace-producto">
+                        <img src="{{ producto.imagen|default:producto.imagen_url }}" 
+                             data-fallback="{% static 'media/logo1.png' %}"
+                             alt="{{ producto.nombre }}" 
+                             loading="lazy"
+                             onerror="this.onerror=null; this.src=this.dataset.fallback; this.classList.add('img-fallback');">
+                    </a>
+                </div>
+
+                <a href="{% url 'detalle_producto' producto.id_str %}" class="enlace-producto">
+                    <h4 class="titulo-producto">{{ producto.nombre }}</h4>
+                    <div class="precios">
+                        <span class="precio-actual">${{ producto.precio }} MXN</span>
+                        {% if producto.precio_original %}
+                        <span class="precio-original">${{ producto.precio_original }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="nota-envio">IVA incluido | Envío al finalizar.</p>
+                </a>
+
+                <div class="index-card-bottom">
+                    {% if producto.agotado or producto.stock == 0 %}
+                    <div class="index-form-quick-add">
+                        <button type="button" class="btn-agotado-card" disabled>AGOTADO</button>
+                    </div>
+                    {% else %}
+                    <!-- Selector Rápido de Tallas -->
+                    <div class="card-size-selector">
+                        {% if producto.tallas %}
+                            {% for talla in producto.tallas %}
+                            <button type="button" class="size-pill-btn {% if forloop.first %}selected{% endif %}" onclick="seleccionarTallaCard(this, '{{ talla }}')">{{ talla }}</button>
+                            {% endfor %}
+                        {% else %}
+                            <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'S')">S</button>
+                            <button type="button" class="size-pill-btn selected" onclick="seleccionarTallaCard(this, 'M')">M</button>
+                            <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'L')">L</button>
+                            <button type="button" class="size-pill-btn" onclick="seleccionarTallaCard(this, 'XL')">XL</button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Formulario de Compra Rápida (AJAX en global.js) -->
+                    <form action="{% url 'agregar_al_carrito' %}" method="POST" class="index-form-quick-add" data-ajax-cart="true">
+                        {% csrf_token %}
+                        <input type="hidden" name="producto_id" value="{{ producto.id_str }}">
+                        <input type="hidden" name="talla" value="{{ producto.tallas.0|default:'M' }}">
+                        <input type="hidden" name="cantidad" value="1">
+                        <button type="submit" class="btn-index-quick">
+                            <ion-icon name="bag-add-outline"></ion-icon>
+                            AGREGAR AL CARRITO
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="sin-resultados" style="display: flex;">
+                <ion-icon name="search-outline"></ion-icon>
+                <p>No se encontraron prendas en MongoDB que coincidan con "{{ query }}".</p>
+                <a href="{% url 'inicio' %}" class="link-limpiar-busqueda">Regresar a la colección completa</a>
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <button class="flecha flecha-derecha" onclick="moverCarrusel(1)">&#10095;</button>
+
+        {% if productos.has_other_pages %}
+        <nav class="vertice-paginacion" aria-label="Paginación de colección destacada">
+            {% if productos.has_previous %}
+                <a href="?page={{ productos.previous_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    &larr; ANTERIOR
+                </a>
+            {% endif %}
+
+            <span class="pag-info">
+                Página {{ productos.number }} de {{ productos.paginator.num_pages }}
+            </span>
+
+            {% if productos.has_next %}
+                <a href="?page={{ productos.next_page_number }}{% if query %}&q={{ query }}{% endif %}" class="pag-btn">
+                    SIGUIENTE &rarr;
+                </a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex, CP 54743</p>
+
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Enviar Correo"><ion-icon name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook" target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr" class="btn-footer instagram" target="_blank" rel="noopener noreferrer" title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

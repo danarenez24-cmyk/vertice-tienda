@@ -1,0 +1,188 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad | VÉRTICE</title>
+
+    <!-- Fuentes y Hojas de Estilo -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/global.css' %}?v=27">
+    <link rel="stylesheet" href="{% static 'css/legal.css' %}?v=1">
+    <script src="{% static 'js/global.js' %}?v=26" defer></script>
+
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+
+<body class="legal-body">
+
+    <!-- Navegador Principal -->
+    <header class="menuprincipal legal-header">
+        <div class="nav-left">
+            <div class="menuhamburguesa" onclick="abrirMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <a href="{% url 'inicio' %}" class="enlace-logo">
+                <img src="{% static 'media/logo1.png' %}?v=2" alt="Logo de Vértice" class="logo">
+            </a>
+        </div>
+
+        <div class="nav-right">
+            <a href="{% url 'checkout' %}" class="icono-carrito-wrapper legal-cart-link" title="Ver Carrito">
+                <ion-icon name="bag-handle-outline" class="icono-bag legal-cart-icon"></ion-icon>
+            </a>
+
+            {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}" class="inicio_sesion legal-account-link">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Mi Cuenta">
+                <p><b>{{ request.session.usuario_nombre }}</b></p>
+            </a>
+            {% else %}
+            <div class="inicio_sesion" onclick="inicio()">
+                <img src="{% static 'media/usuario1.png' %}?v=2" alt="Iniciar sesión">
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Contenido Legal -->
+    <main class="legal-wrapper">
+        <span class="legal-kicker">DOCUMENTACIÓN LEGAL · VÉRTICE MX</span>
+        <h1 class="legal-title">POLÍTICA DE PRIVACIDAD</h1>
+        <div class="legal-meta">
+            <span>Última actualización: Noviembre de 2026</span>
+            <span>Jurisdicción: Estados Unidos Mexicanos</span>
+        </div>
+
+        <div class="legal-highlight-box">
+            <p>En <strong>VÉRTICE</strong> valoramos tu privacidad y protegemos tus datos personales conforme a la <strong>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP)</strong>. Este documento explica qué datos recopilamos, cómo los utilizamos y cómo puedes ejercer tus derechos.</p>
+        </div>
+
+        <section class="legal-section">
+            <h2>1. Responsable del Tratamiento de los Datos</h2>
+            <p><strong>VÉRTICE</strong>, con domicilio físico en Calle Torre Satélite, Torre Frontera S/N, Sta. María Guadalupe Las Torres, Cuautitlán Izcalli, Estado de México, C.P. 54743, es responsable del uso, resguardo y protección de tus datos personales.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>2. Datos Personales que Recopilamos</h2>
+            <p>Para brindarte una experiencia completa de compra y personalización en nuestra tienda en línea, podemos recopilar las siguientes categorías de información:</p>
+            <ul>
+                <li><strong>Datos de identificación y contacto:</strong> Nombre completo, correo electrónico, número telefónico y dirección de entrega.</li>
+                <li><strong>Datos de acceso y autenticación:</strong> Credenciales cifradas de tu cuenta, identificador de inicio de sesión mediante código QR o vinculación con proveedores externos (Google o Apple).</li>
+                <li><strong>Historial comercial:</strong> Pedidos realizados, tallas seleccionadas, lista de favoritos (wishlist) y preferencias de compra.</li>
+                <li><strong>Datos para Estilista IA y Probador Virtual:</strong> Preferencias de estilo, medidas aproximadas o fotografías cargadas voluntariamente para generar recomendaciones o vistas previas de prendas.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>3. Finalidades del Tratamiento</h2>
+            <p>Tus datos personales serán utilizados exclusivamente para las siguientes finalidades esenciales:</p>
+            <ul>
+                <li>Crear, administrar y autenticar tu cuenta de usuario en la plataforma.</li>
+                <li>Procesar pedidos, gestionar pagos, coordinar envíos y atender cambios, devoluciones o soporte al cliente.</li>
+                <li>Operar las herramientas interactivas de <strong>Estilista IA</strong> y visualización de outfits personalizados.</li>
+                <li>Enviar notificaciones relacionadas con el estado de tus compras o actualizaciones relevantes de seguridad.</li>
+            </ul>
+        </section>
+
+        <section class="legal-section">
+            <h2>4. Uso de Imágenes en el Probador Virtual y Estilista IA</h2>
+            <p>Las imágenes o parámetros que proporciones al utilizar nuestras herramientas de inteligencia artificial se procesan únicamente en tiempo real para mostrarte combinaciones sugeridas. <strong>VÉRTICE</strong> no comercializa, publica ni comparte tus fotografías personales con terceros ajenos a la operación técnica del servicio.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>5. Transferencia y Seguridad de la Información</h2>
+            <p>Implementamos medidas técnicas, administrativas y de cifrado para proteger tu información contra acceso no autorizado, pérdida o alteración. No vendemos ni alquilamos tus datos personales; únicamente compartimos información estrictamente necesaria con proveedores de paquetería y pasarelas de pago para completar tus pedidos.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>6. Derechos ARCO (Acceso, Rectificación, Cancelación y Oposición)</h2>
+            <p>Tienes derecho a conocer qué datos tenemos de ti, solicitar su corrección si están desactualizados, pedir su eliminación de nuestros registros o revocar tu consentimiento para su uso. Para ejercer cualquiera de tus derechos ARCO, puedes escribirnos directamente a <a href="mailto:aend091124hmcrxna6@soycecytem.mx" class="legal-inline-link">aend091124hmcrxna6@soycecytem.mx</a> o acudir a nuestra sucursal en Cuautitlán Izcalli.</p>
+        </section>
+
+        <section class="legal-section">
+            <h2>7. Uso de Cookies y Almacenamiento Local</h2>
+            <p>Utilizamos cookies de sesión y almacenamiento local en tu navegador para mantener activo tu carrito de compras, recordar tu sesión iniciada y conservar tu look activo en el Estilista IA mientras navegas por el catálogo.</p>
+        </section>
+
+        <div class="legal-nav-footer">
+            <a href="{% url 'login' %}" class="btn-legal-outline">
+                <ion-icon name="arrow-back-outline"></ion-icon>
+                VOLVER AL INICIO DE SESIÓN
+            </a>
+            <a href="{% url 'politica_de_uso' %}" class="btn-legal-outline">
+                VER TÉRMINOS DE USO
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+            </a>
+        </div>
+    </main>
+
+    <!-- Overlay y Menús Laterales -->
+    <div id="overlay" class="overlay" onclick="cerrarMenus()"></div>
+
+    <nav id="menu" class="menu">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CATEGORÍAS</h2>
+        <br>
+        <a href="{% url 'el' %}">EL</a>
+        <a href="{% url 'ella' %}">ELLA</a>
+        <a href="{% url 'niños' %}">NIÑOS</a>
+        <a href="{% url 'fin_año' %}">FIN DE AÑO</a>
+        <a href="{% url 'contacto' %}">CONTACTO</a>
+    </nav>
+
+    <nav id="inicio" class="menu-inicio">
+        <div class="cerrar" onclick="cerrarMenus()">×</div>
+        <h2>CUENTA</h2>
+        {% if request.session.usuario_nombre %}
+            <a href="{% url 'perfil' %}">MI PERFIL Y PEDIDOS</a>
+            <a href="{% url 'logout' %}" class="menu-logout-link">CERRAR SESIÓN</a>
+        {% else %}
+            <a href="{% url 'login' %}">INICIAR SESIÓN O <br>CREAR CUENTA</a>
+            <a href="{% url 'inicio' %}">CONTINUAR SIN CUENTA</a>
+        {% endif %}
+    </nav>
+
+    <!-- Footer General -->
+    <footer class="site-footer">
+        <div class="site-footer-top">
+            <div class="footer-col">
+                <h3>Visítanos</h3>
+                <p>Calle Torre Satelite, Torre Frontera S/N, Sta Maria Guadalupe Las Torres<br>Cuautitlan Izcalli, Mex, CP 54743</p>
+                <div class="footer-contacto-iconos">
+                    <a href="tel:5588062197" class="btn-footer call" title="Llamar"><ion-icon name="call-outline"></ion-icon></a>
+                    <a href="mailto:contacto@tutienda.com" class="btn-footer mail" title="Enviar Correo"><ion-icon name="mail-outline"></ion-icon></a>
+                    <a href="https://wa.me/525588062197" class="btn-footer whatsapp" target="_blank" rel="noopener noreferrer" title="WhatsApp"><ion-icon name="logo-whatsapp"></ion-icon></a>
+                    <a href="https://www.facebook.com/share/19QHDNEFKY/?mibextid=wwXIfr" class="btn-footer facebook" target="_blank" rel="noopener noreferrer" title="Facebook"><ion-icon name="logo-facebook"></ion-icon></a>
+                    <a href="https://www.instagram.com/ver_ticemx?stkn=Nm11eGg3Yml6cjhm&utm_source=qr" class="btn-footer instagram" target="_blank" rel="noopener noreferrer" title="Instagram"><ion-icon name="logo-instagram"></ion-icon></a>
+                </div>
+            </div>
+
+            <div class="footer-col horarios-col">
+                <div class="horario-row"><span>Lunes - Viernes</span><span>7am - 6pm</span></div>
+                <div class="horario-row"><span>Sábado</span><span>8am - 5pm</span></div>
+                <div class="horario-row"><span>Domingo</span><span>8am - 3pm</span></div>
+            </div>
+
+            <div class="footer-col mapa-col">
+                <iframe class="footer-map-iframe" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12545.546124943501!2d-99.21521942237213!3d19.636176033183727!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d21e71a3637ea9%3A0xa5750308e15a5cbd!2sCECyTEM%20Cuautitl%C3%A1n%20Izcalli!5e1!3m2!1ses!2smx!4v1790996571166!5m2!1ses!2smx" width="600" height="450" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <div class="site-footer-bottom">
+            <p>&copy; 2026 Vértice. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>
