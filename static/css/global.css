@@ -1622,3 +1622,6 @@ footer.site-footer .site-footer-bottom {
         justify-content: center;
     }
 }
+:root {
+    color-scheme: light only;
+}

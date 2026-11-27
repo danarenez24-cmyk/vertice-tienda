@@ -779,3 +779,6 @@
     flex-direction: column;
     gap: 12px;
 }
+:root {
+    color-scheme: light only;
+}

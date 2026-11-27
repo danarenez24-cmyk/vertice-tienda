@@ -1,7 +1,9 @@
 /* ==========================================================================
    ESTILOS FIN DE AÑO - BLANCO Y NEGRO / ALTO CONTRASTE CON CONTADOR Y MARQUEE
    ========================================================================== */
-
+:root {
+    color-scheme: light only;
+}
 .fde-body-light {
     background-color: #ffffff;
     color: #111111;

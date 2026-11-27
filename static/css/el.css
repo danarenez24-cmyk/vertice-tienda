@@ -527,3 +527,6 @@
         margin-top: 80px !important;
     }
 }
+:root {
+    color-scheme: light only;
+}

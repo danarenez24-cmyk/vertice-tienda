@@ -1117,3 +1117,6 @@ footer.site-footer .site-footer-bottom {
         padding: 14px !important;
     }
 }
+:root {
+    color-scheme: light only;
+}

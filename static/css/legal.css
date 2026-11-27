@@ -193,3 +193,6 @@ body.legal-body {
         justify-content: center;
     }
 }
+:root {
+    color-scheme: light only;
+}

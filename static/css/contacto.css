@@ -1,4 +1,8 @@
 /* Reset general y tipografía */
+
+:root {
+    color-scheme: light only;
+}
 * {
     margin: 0;
     padding: 0;

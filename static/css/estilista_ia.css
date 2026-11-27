@@ -296,3 +296,6 @@
         padding: 8px 10px;
     }
 }
+:root {
+    color-scheme: light only;
+}
