@@ -163,27 +163,29 @@
             </div>
 
             <!-- 03 | SEGURIDAD -->
-            <h3>{% if tiene_password %}CAMBIAR CONTRASEÑA{% else %}CREAR CONTRASEÑA{% endif %}</h3>
+            <div id="tab-seguridad" class="tab-content">
+                <h2 class="section-title">{% if tiene_password %}CAMBIAR CONTRASEÑA{% else %}CREAR CONTRASEÑA{% endif %}</h2>
 
-            <form method="POST" action="{% url 'cambiar_password' %}">
-                {% csrf_token %}
+                <form method="POST" action="{% url 'cambiar_password' %}">
+                    {% csrf_token %}
 
-                {% if tiene_password %}
-                <div class="form-group">
-                    <label>CONTRASEÑA ACTUAL</label>
-                    <input type="password" name="pass_actual" required>
-                </div>
-                {% endif %}
+                    {% if tiene_password %}
+                    <div class="form-group">
+                        <label>CONTRASEÑA ACTUAL</label>
+                        <input type="password" name="pass_actual" required>
+                    </div>
+                    {% endif %}
 
-                <div class="form-group">
-                    <label>NUEVA CONTRASEÑA (MÍNIMO 8 CARACTERES)</label>
-                    <input type="password" name="pass_nueva" minlength="8" required>
-                </div>
+                    <div class="form-group">
+                        <label>NUEVA CONTRASEÑA (MÍNIMO 8 CARACTERES)</label>
+                        <input type="password" name="pass_nueva" minlength="8" required>
+                    </div>
 
-                <button type="submit" class="btn-primary">
-                    {% if tiene_password %}ACTUALIZAR CONTRASEÑA{% else %}GUARDAR CONTRASEÑA{% endif %}
-                </button>
-            </form>
+                    <button type="submit" class="btn-save">
+                        {% if tiene_password %}ACTUALIZAR CONTRASEÑA{% else %}GUARDAR CONTRASEÑA{% endif %}
+                    </button>
+                </form>
+            </div>
 
             <!-- 04 | METODOS DE PAGO -->
             <div id="tab-metodos-pago" class="tab-content active">
