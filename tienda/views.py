@@ -7,8 +7,9 @@ import json
 import os
 import random
 import re
-import uuid
 import shutil
+import threading
+import uuid
 
 from bson import ObjectId
 from django.conf import settings
@@ -1072,16 +1073,19 @@ def seccion_contacto(request):
             }
             db.mensajes_contacto.insert_one(contacto_doc)
 
-            try:
-                send_mail(
-                    subject=f'Nuevo Contacto: {motivo} - {nombre}',
-                    message=f'Nombre: {nombre}\nCorreo: {email}\nTeléfono: {telefono}\nMotivo: {motivo}\n\nMensaje:\n{mensaje}',
-                    from_email='dan.are.nez.24@gmail.com',
-                    recipient_list=['dan.are.nez.24@gmail.com'],
-                    fail_silently=True,
-                )
-            except Exception as mail_err:
-                print("Error enviando notificación por correo:", mail_err)
+            def _enviar_correo_contacto():
+                try:
+                    send_mail(
+                        subject=f'Nuevo Contacto: {motivo} - {nombre}',
+                        message=f'Nombre: {nombre}\nCorreo: {email}\nTeléfono: {telefono}\nMotivo: {motivo}\n\nMensaje:\n{mensaje}',
+                        from_email='dan.are.nez.24@gmail.com',
+                        recipient_list=['dan.are.nez.24@gmail.com'],
+                        fail_silently=True,
+                    )
+                except Exception as mail_err:
+                    print("Error enviando notificación por correo:", mail_err)
+
+            threading.Thread(target=_enviar_correo_contacto, daemon=True).start()
 
             mensaje_exito = "¡Gracias por contactarnos! Tu mensaje ha sido enviado correctamente."
             return render(request, 'contacto.html', {'mensaje_exito': mensaje_exito})
@@ -1572,28 +1576,31 @@ def procesar_pago_view(request):
         request.session.pop('cupon_activo', None)
         request.session.modified = True
 
-        try:
-            texto_envio = 'GRATIS' if resumen['envio'] == 0 else f"${resumen['envio']} MXN"
-            cuerpo_email = (
-                f"¡Gracias por tu compra en VÉRTICE!\n\n"
-                f"Fecha: {fecha_actual}\n"
-                f"Método de pago: {metodo_pago}\n"
-                f"Envío: {texto_envio}\n"
-                f"Total pagado: ${resumen['total']} MXN\n\n"
-                f"Resumen de prendas:\n" + "\n".join(detalle_correo) +
-                f"\n\nPuedes consultar tu Ticket Digital QR en tu perfil dentro de la tienda."
-            )
-            send_mail(
-                subject=f"Confirmación de Pedido VÉRTICE ({', '.join(folios_generados)})",
-                message=cuerpo_email,
-                from_email='dan.are.nez.24@gmail.com',
-                recipient_list=[usuario_email],
-                fail_silently=True,
-            )
-        except Exception as mail_err:
-            print("Error enviando confirmación de pedido:", mail_err)
+        def _enviar_correo_pedido():
+            try:
+                texto_envio = 'GRATIS' if resumen['envio'] == 0 else f"${resumen['envio']} MXN"
+                cuerpo_email = (
+                    f"¡Gracias por tu compra en VÉRTICE!\n\n"
+                    f"Fecha: {fecha_actual}\n"
+                    f"Método de pago: {metodo_pago}\n"
+                    f"Envío: {texto_envio}\n"
+                    f"Total pagado: ${resumen['total']} MXN\n\n"
+                    f"Resumen de prendas:\n" + "\n".join(detalle_correo) +
+                    f"\n\nPuedes consultar tu Ticket Digital QR en tu perfil dentro de la tienda."
+                )
+                send_mail(
+                    subject=f"Confirmación de Pedido VÉRTICE ({', '.join(folios_generados)})",
+                    message=cuerpo_email,
+                    from_email='dan.are.nez.24@gmail.com',
+                    recipient_list=[usuario_email],
+                    fail_silently=True,
+                )
+            except Exception as mail_err:
+                print("Error enviando confirmación de pedido:", mail_err)
 
-        messages.success(request, '¡Pago realizado con éxito! Enviamos el resumen a tu correo y tu Ticket QR está listo.')
+        threading.Thread(target=_enviar_correo_pedido, daemon=True).start()
+
+        messages.success(request, '¡Pago realizado con éxito! Tu Ticket Digital QR está listo.')
         if ultimo_pedido_id:
             return redirect(f"{reverse('perfil')}?tab=pedidos&ticket={ultimo_pedido_id}")
         return redirect('perfil')
