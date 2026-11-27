@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autorizar Acceso QR — VÉRTICE</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body {
+            background: #f6f6f6;
+            color: #111;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: #fff;
+            width: 100%;
+            max-width: 400px;
+            padding: 36px 28px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        .logo { width: 90px; margin-bottom: 18px; }
+        h1 { font-size: 20px; letter-spacing: 0.5px; margin-bottom: 10px; }
+        p { font-size: 14px; color: #555; line-height: 1.5; margin-bottom: 24px; }
+        .google-wrap { display: flex; justify-content: center; margin: 16px 0; }
+        .status-msg { margin-top: 18px; font-size: 14px; font-weight: 600; }
+        .status-ok { color: #15803d; }
+        .status-err { color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <img src="{% static 'media/logo1.png' %}" alt="VÉRTICE" class="logo">
+
+        {% if error %}
+            <h1>Código QR no válido</h1>
+            <p class="status-err">{{ error }}</p>
+            <p>Genera un nuevo código QR desde la pantalla de inicio de sesión en tu computadora.</p>
+        {% else %}
+            <h1>INICIAR SESIÓN EN PC</h1>
+            <p>Confirma tu identidad con tu cuenta de Google para abrir tu sesión automáticamente en el navegador.</p>
+
+            {% csrf_token %}
+
+            <div id="g_id_onload"
+                 data-client_id="{{ google_client_id }}"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false">
+            </div>
+
+            <div class="google-wrap">
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="continue_with"
+                     data-size="large"
+                     data-logo_alignment="center">
+                </div>
+            </div>
+
+            <div id="status" class="status-msg"></div>
+        {% endif %}
+    </div>
+
+    {% if not error %}
+    <script>
+        function getCSRFToken() {
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            return input ? input.value : '';
+        }
+
+        function handleCredentialResponse(response) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status-msg';
+            statusEl.textContent = 'Autorizando acceso en tu computadora...';
+
+            fetch("{% url 'aprobar_login_qr' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify({
+                    token_qr: "{{ token }}",
+                    google_jwt: response.credential
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "ok") {
+                    statusEl.className = 'status-msg status-ok';
+                    statusEl.textContent = '¡Listo! Ya iniciaste sesión en tu computadora. Puedes cerrar esta pestaña.';
+                } else {
+                    statusEl.className = 'status-msg status-err';
+                    statusEl.textContent = 'Error: ' + (data.message || 'No se pudo autorizar el acceso.');
+                }
+            })
+            .catch(() => {
+                statusEl.className = 'status-msg status-err';
+                statusEl.textContent = 'Error de conexión con el servidor. Intenta de nuevo.';
+            });
+        }
+    </script>
+    {% endif %}
+</body>
+</html>
