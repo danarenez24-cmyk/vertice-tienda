@@ -1,4 +1,5 @@
 import base64
+from collections import Counter, defaultdict
 from datetime import datetime
 from functools import wraps
 import io
@@ -1439,7 +1440,6 @@ def procesar_pago_view(request):
             messages.error(request, 'Tu carrito está vacío.')
             return redirect('checkout')
 
-        # 1. Verificación previa de disponibilidad para cada prenda del carrito
         for item in items:
             prod_id = item.get('producto_id')
             talla = item.get('talla', 'Única')
@@ -1458,7 +1458,6 @@ def procesar_pago_view(request):
                     messages.error(request, f'Solo quedan {stock_disp} unidades de "{item.get("nombre")}" en talla {talla}. Ajusta tu carrito.')
                 return redirect('checkout')
 
-        # 2. Descuento atómico con rollback si otro usuario compró la última unidad al mismo tiempo
         items_descontados = []
         for item in items:
             exito = descontar_stock_producto(item['producto_id'], item['talla'], item['cantidad'])
@@ -1605,7 +1604,7 @@ def agregar_pedido_view(request):
 
 
 # ==============================================================================
-# PANEL DE ADMINISTRACIÓN (DASHBOARD, PRODUCTOS, PEDIDOS, QR Y USUARIOS)
+# PANEL DE ADMINISTRACIÓN (DASHBOARD, ANALÍTICA AVANZADA, PRODUCTOS, PEDIDOS, QR)
 # ==============================================================================
 
 @requiere_rol(roles_permitidos=['admin', 'superadmin'])
@@ -1618,17 +1617,14 @@ def admin_dashboard_view(request):
     total_usuarios = db.usuarios.count_documents({})
 
     pedidos_todos = list(db.pedidos.find({}).sort('_id', -1))
-    ingresos_totales = sum(p.get('total', 0) for p in pedidos_todos)
-
-    for p in pedidos_todos:
-        p['id_str'] = str(p['_id'])
-        p['folio'] = obtener_folio_pedido(p)
-
-    ultimos_pedidos = paginar_lista(request, pedidos_todos, por_pagina=15, param_pagina='page_pedidos')
-
     productos_lista = list(db.Productos.find({}).sort('_id', -1))
+    usuarios_todos = list(db.usuarios.find({}))
+
+    # Mapa rápido de productos para cruzar categorías en las ventas
+    mapa_prod_cat = {}
     for p in productos_lista:
-        p['id_str'] = str(p['_id'])
+        pid = str(p['_id'])
+        p['id_str'] = pid
         img = normalizar_url_imagen(p.get('imagen_url') or p.get('imagen', ''))
         p['imagen_url'] = img
         p['imagen'] = img
@@ -1636,7 +1632,133 @@ def admin_dashboard_view(request):
         p['tallas_str'] = ', '.join(tallas_val) if isinstance(tallas_val, list) else str(tallas_val)
         p['stock_numerico'] = obtener_stock_disponible(p)
         p['es_stock_por_talla'] = isinstance(p.get('stock'), dict)
+        mapa_prod_cat[pid] = str(p.get('categoria', 'otros')).lower()
 
+    # Cálculos de analítica financiera y operativa
+    nombres_cat = {'el': 'ÉL', 'ella': 'ELLA', 'niños': 'NIÑOS', 'fin_año': 'FIN DE AÑO'}
+    ingresos_totales = 0.0
+    pedidos_validos = 0
+    unidades_vendidas_total = 0
+
+    ingresos_por_dia = defaultdict(float)
+    pedidos_por_dia = defaultdict(int)
+    ingresos_por_categoria = defaultdict(float)
+    ventas_por_talla = Counter()
+    unidades_por_prenda = Counter()
+    ingresos_por_prenda = defaultdict(float)
+    metodos_pago_count = Counter()
+    estados_count = Counter()
+    gasto_por_cliente = defaultdict(float)
+
+    for p in pedidos_todos:
+        p['id_str'] = str(p['_id'])
+        p['folio'] = obtener_folio_pedido(p)
+        estado = p.get('estado', 'Procesando')
+        estados_count[estado] += 1
+
+        if estado == 'Cancelado':
+            continue
+
+        total_ped = float(p.get('total', 0))
+        cant_ped = int(p.get('cantidad', 1))
+        ingresos_totales += total_ped
+        pedidos_validos += 1
+        unidades_vendidas_total += cant_ped
+
+        fecha_raw = str(p.get('fecha', '')).strip()
+        dia = fecha_raw.split(' ')[0] if fecha_raw else 'Sin fecha'
+        ingresos_por_dia[dia] += total_ped
+        pedidos_por_dia[dia] += 1
+
+        cat_key = mapa_prod_cat.get(str(p.get('producto_id', '')), 'otros')
+        cat_label = nombres_cat.get(cat_key, cat_key.upper() if cat_key != 'otros' else 'GENERAL')
+        ingresos_por_categoria[cat_label] += total_ped
+
+        talla_ped = str(p.get('talla', 'Única')).upper()
+        ventas_por_talla[talla_ped] += cant_ped
+
+        nombre_p = p.get('producto_nombre', 'Prenda Vértice')
+        unidades_por_prenda[nombre_p] += cant_ped
+        ingresos_por_prenda[nombre_p] += total_ped
+
+        metodo = p.get('metodo_pago', 'Tarjeta')
+        if '****' in metodo:
+            metodo = 'Tarjeta Guardada / Débito'
+        metodos_pago_count[metodo] += 1
+
+        cliente_email = p.get('usuario_email', 'Invitado')
+        gasto_por_cliente[cliente_email] += total_ped
+
+    ingresos_totales = round(ingresos_totales, 2)
+    ticket_promedio = round(ingresos_totales / pedidos_validos, 2) if pedidos_validos > 0 else 0.0
+
+    # 1. Serie temporal: Ingresos (MXN) y Volumen de Pedidos por día (últimos 10 días con movimiento)
+    dias_ordenados = list(reversed(list(ingresos_por_dia.keys())))[-10:]
+    if not dias_ordenados:
+        dias_ordenados = ['Sin registros']
+    serie_ingresos = [round(ingresos_por_dia[d], 2) for d in dias_ordenados]
+    serie_pedidos_dia = [pedidos_por_dia[d] for d in dias_ordenados]
+
+    # 2. Ingresos generados por categoría (MXN)
+    if ingresos_por_categoria:
+        cat_ing_labels = list(ingresos_por_categoria.keys())
+        cat_ing_values = [round(ingresos_por_categoria[k], 2) for k in cat_ing_labels]
+    else:
+        cat_ing_labels = ['ÉL', 'ELLA', 'NIÑOS', 'FIN DE AÑO']
+        cat_ing_values = [0, 0, 0, 0]
+
+    # 3. Inventario: Stock disponible por categoría + alertas de stock bajo (< 5 uds)
+    stock_por_cat = defaultdict(int)
+    stock_bajo_items = []
+    for prod in productos_lista:
+        c_label = nombres_cat.get(str(prod.get('categoria', '')).lower(), 'OTROS')
+        stk = prod.get('stock_numerico')
+        if stk is not None:
+            stock_por_cat[c_label] += stk
+            if stk <= 5:
+                stock_bajo_items.append({'nombre': prod.get('nombre', ''), 'stock': stk})
+
+    inv_cat_labels = list(stock_por_cat.keys()) or ['Sin stock']
+    inv_cat_values = [stock_por_cat[k] for k in inv_cat_labels]
+
+    # 4. Demanda por Talla (S, M, L, XL, etc.)
+    orden_tallas = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'ÚNICA']
+    tallas_presentes = [t for t in orden_tallas if ventas_por_talla[t] > 0]
+    for t in ventas_por_talla:
+        if t not in tallas_presentes:
+            tallas_presentes.append(t)
+    tallas_labels = tallas_presentes or ['S', 'M', 'L', 'XL']
+    tallas_values = [ventas_por_talla[t] for t in tallas_labels]
+
+    # 5. Estado de Pedidos
+    estados_orden = ['Procesando', 'Enviado', 'Entregado', 'Cancelado']
+    est_labels = estados_orden
+    est_values = [estados_count.get(e, 0) for e in estados_orden]
+
+    # 6. Top 5 Prendas Más Vendidas (unidades e ingresos)
+    top_prendas = unidades_por_prenda.most_common(5)
+    top_labels = [t[0][:22] + ('…' if len(t[0]) > 22 else '') for t in top_prendas] or ['Sin ventas']
+    top_unidades = [t[1] for t in top_prendas] or [0]
+    top_ingresos = [round(ingresos_por_prenda[t[0]], 2) for t in top_prendas] or [0]
+
+    # 7. Canales de Registro de Usuarios (Web / Google / QR)
+    metodos_reg_map = {
+        'google_web': 'Google OAuth',
+        'qr_google': 'Escaneo QR',
+    }
+    reg_counter = Counter(
+        metodos_reg_map.get(u.get('metodo_registro', ''), 'Correo y Contraseña')
+        for u in usuarios_todos
+    )
+    reg_labels = list(reg_counter.keys()) or ['Correo y Contraseña']
+    reg_values = list(reg_counter.values()) or [0]
+
+    # 8. Top 5 Clientes por monto comprado
+    top_clientes_raw = sorted(gasto_por_cliente.items(), key=lambda x: x[1], reverse=True)[:5]
+    clientes_labels = [c[0].split('@')[0] for c in top_clientes_raw] or ['Sin clientes']
+    clientes_values = [round(c[1], 2) for c in top_clientes_raw] or [0]
+
+    ultimos_pedidos = paginar_lista(request, pedidos_todos, por_pagina=15, param_pagina='page_pedidos')
     productos = paginar_lista(request, productos_lista, por_pagina=20, param_pagina='page_productos')
 
     mensajes_contacto = list(db.mensajes_contacto.find({}).sort('_id', -1).limit(30))
@@ -1648,21 +1770,46 @@ def admin_dashboard_view(request):
         if m.get('estatus', 'Pendiente') == 'Pendiente':
             mensajes_pendientes += 1
 
-    usuarios = list(db.usuarios.find({})) if usuario_actual.get('rol') == 'superadmin' else []
+    usuarios = usuarios_todos if usuario_actual.get('rol') == 'superadmin' else []
     for u in usuarios:
         u['id_str'] = str(u['_id'])
+
+    analytics_payload = {
+        'dias_labels': dias_ordenados,
+        'serie_ingresos': serie_ingresos,
+        'serie_pedidos_dia': serie_pedidos_dia,
+        'cat_ing_labels': cat_ing_labels,
+        'cat_ing_values': cat_ing_values,
+        'inv_cat_labels': inv_cat_labels,
+        'inv_cat_values': inv_cat_values,
+        'tallas_labels': tallas_labels,
+        'tallas_values': tallas_values,
+        'est_labels': est_labels,
+        'est_values': est_values,
+        'top_labels': top_labels,
+        'top_unidades': top_unidades,
+        'top_ingresos': top_ingresos,
+        'reg_labels': reg_labels,
+        'reg_values': reg_values,
+        'clientes_labels': clientes_labels,
+        'clientes_values': clientes_values,
+    }
 
     contexto = {
         'usuario_actual': usuario_actual,
         'total_productos': total_productos,
         'total_pedidos': total_pedidos,
         'total_usuarios': total_usuarios,
-        'ingresos_totales': ingresos_totales,
+        'ingresos_totales': f"{ingresos_totales:,.2f}",
+        'ticket_promedio': f"{ticket_promedio:,.2f}",
+        'unidades_vendidas_total': unidades_vendidas_total,
+        'stock_bajo_count': len(stock_bajo_items),
         'ultimos_pedidos': ultimos_pedidos,
         'productos': productos,
         'mensajes_contacto': mensajes_contacto,
         'mensajes_pendientes': mensajes_pendientes,
         'usuarios': usuarios,
+        'analytics_json': json.dumps(analytics_payload),
     }
     return render(request, 'admin_dashboard.html', contexto)
 
@@ -1903,6 +2050,7 @@ def admin_verificar_ticket(request):
         }
     })
 
+
 # ==============================================================================
 # PROBADOR VIRTUAL: RECORTE DE PRENDA CON IA (REMBG + CACHÉ LOCAL)
 # ==============================================================================
@@ -1925,11 +2073,9 @@ def recortar_prenda_ia_view(request, producto_id):
         ruta_cutout = os.path.join(cutouts_dir, nombre_png)
         url_cutout = static(f"media/cutouts/{nombre_png}")
 
-        # 1. Si ya fue recortada anteriormente, devolver al instante desde caché
         if os.path.exists(ruta_cutout) and os.path.getsize(ruta_cutout) > 0:
             return JsonResponse({'ok': True, 'cutout_url': url_cutout, 'cached': True})
 
-        # 2. Buscar el producto en MongoDB
         producto = None
         if ObjectId.is_valid(clean_id):
             producto = db.Productos.find_one({'_id': ObjectId(clean_id)})
@@ -1944,7 +2090,6 @@ def recortar_prenda_ia_view(request, producto_id):
         if match_tag:
             ruta_raw = match_tag.group(1).strip()
 
-        # 3. Obtener bytes de la imagen original (local en static/ o URL externa)
         input_bytes = None
         if ruta_raw.startswith(('http://', 'https://')):
             import urllib.request
@@ -1966,7 +2111,6 @@ def recortar_prenda_ia_view(request, producto_id):
         if not input_bytes:
             return JsonResponse({'ok': False, 'error': 'No se encontró el archivo de imagen de la prenda.'}, status=404)
 
-        # 4. Ejecutar rembg (reutilizando la sesión en memoria para mayor velocidad)
         from rembg import new_session, remove
         if _rembg_session is None:
             _rembg_session = new_session("u2net")
@@ -1987,6 +2131,7 @@ def recortar_prenda_ia_view(request, producto_id):
         print("--> Error en recortar_prenda_ia_view:", e)
         return JsonResponse({'ok': False, 'error': str(e)}, status=500)
 
+
 def probar_prenda_generativa_view(request, producto_id):
     if request.method != 'POST':
         return JsonResponse({'ok': False, 'error': 'Método no permitido'}, status=405)
@@ -1995,7 +2140,6 @@ def probar_prenda_generativa_view(request, producto_id):
     if not foto_usuario:
         return JsonResponse({'ok': False, 'error': 'Falta la foto del usuario'}, status=400)
 
-    # 1. Buscar el producto en MongoDB
     try:
         producto = db.Productos.find_one({'_id': ObjectId(producto_id)})
     except Exception:
@@ -2004,7 +2148,6 @@ def probar_prenda_generativa_view(request, producto_id):
     if not producto:
         return JsonResponse({'ok': False, 'error': 'Producto no encontrado'}, status=404)
 
-    # 2. Preparar carpetas temporales y de salida en static/media/vton/
     base_static = os.path.join(settings.BASE_DIR, 'static')
     vton_dir = os.path.join(base_static, 'media', 'vton')
     os.makedirs(vton_dir, exist_ok=True)
@@ -2014,12 +2157,10 @@ def probar_prenda_generativa_view(request, producto_id):
     garment_temp_path = os.path.join(vton_dir, f'garment_{uid}.png')
 
     try:
-        # Guardar foto subida por el usuario
         with open(user_temp_path, 'wb+') as dest:
             for chunk in foto_usuario.chunks():
                 dest.write(chunk)
 
-        # Obtener la imagen del producto (priorizar el recorte limpio de rembg si existe)
         cutout_path = os.path.join(base_static, 'media', 'cutouts', f'{producto_id}.png')
         img_url = producto.get('imagen_url') or producto.get('imagen', '')
 
@@ -2037,7 +2178,6 @@ def probar_prenda_generativa_view(request, producto_id):
             local_img = os.path.join(base_static, rel_path)
             shutil.copy(local_img, garment_temp_path)
 
-        # 3. Llamar a IDM-VTON en Hugging Face con prompt enriquecido
         from gradio_client import Client, handle_file
 
         hf_token = os.environ.get('HF_TOKEN') or None
@@ -2047,7 +2187,6 @@ def probar_prenda_generativa_view(request, producto_id):
         subcat_p = (producto.get('subcategoria') or producto.get('categoria') or '').strip()
         desc_p = (producto.get('descripcion') or '').strip()
 
-        # Descripción técnica detallada para que la IA respete corte, cuello y tela
         descripcion_prenda = f"{nombre_p}, {subcat_p}. {desc_p}".strip(" ,.")
         if not descripcion_prenda:
             descripcion_prenda = "high quality fashion garment, realistic fabric texture"
@@ -2056,20 +2195,18 @@ def probar_prenda_generativa_view(request, producto_id):
             dict={"background": handle_file(user_temp_path), "layers": [], "composite": None},
             garm_img=handle_file(garment_temp_path),
             garment_des=descripcion_prenda[:220],
-            is_checked=True,        # Auto-detecta y borra la ropa anterior
-            is_checked_crop=False,  # Mantiene la foto completa del usuario
-            denoise_steps=40,       # Mayor nitidez en costuras, rayas y pliegues (máx recomendado)
+            is_checked=True,
+            is_checked_crop=False,
+            denoise_steps=40,
             seed=42,
             api_name="/tryon"
         )
 
-        # Gradio devuelve una tupla (ruta_imagen_generada, ruta_mascara)
         generated_temp = result[0] if isinstance(result, (list, tuple)) else result
         out_filename = f'result_{producto_id}_{uid}.png'
         out_path = os.path.join(vton_dir, out_filename)
         shutil.copy(generated_temp, out_path)
 
-        # Limpiar archivos temporales de entrada
         for p in (user_temp_path, garment_temp_path):
             if os.path.exists(p):
                 os.remove(p)
@@ -2088,12 +2225,8 @@ def probar_prenda_generativa_view(request, producto_id):
             'error': f'El servidor de IA está ocupado o tardó demasiado: {str(e)}'
         }, status=500)
 
-def estilista_ia_chat_view(request):
-    import os
-    import json
-    import re
-    from django.http import JsonResponse
 
+def estilista_ia_chat_view(request):
     if request.method != 'POST':
         return JsonResponse({'ok': False, 'error': 'Método no permitido'}, status=405)
 
@@ -2114,7 +2247,6 @@ def estilista_ia_chat_view(request):
         "y prendas disponibles en nuestra tienda."
     )
 
-    # 1. Leer catálogo real disponible desde MongoDB
     productos_db = list(db.Productos.find({'agotado': {'$ne': True}}).limit(60))
     catalogo_resumido = []
     mapa_productos = {}
@@ -2141,7 +2273,6 @@ def estilista_ia_chat_view(request):
         catalogo_resumido.append(item)
         mapa_productos[pid] = item
 
-    # 2. Intentar responder con Gemini API si existe GEMINI_API_KEY
     api_key = os.environ.get('GEMINI_API_KEY')
     respuesta_texto = ''
     ids_recomendados = []
@@ -2204,7 +2335,6 @@ def estilista_ia_chat_view(request):
         except Exception as e:
             print("Fallback estilista local por error en Gemini:", e)
 
-    # 3. Filtro y respaldo local (cuando no hay GEMINI_API_KEY o falló la API)
     if not fuera_de_tema and not respuesta_texto:
         msg_lower = mensaje_usuario.lower()
         tokens = set(re.findall(r'[a-záéíóúñ]+', msg_lower))
@@ -2217,7 +2347,6 @@ def estilista_ia_chat_view(request):
                 'productos': []
             })
 
-        # Palabras clave válidas de moda, tienda, ocasiones, clima y presupuesto
         palabras_moda = {
             'ropa', 'outfit', 'outfits', 'look', 'looks', 'vestir', 'vestimenta', 'prenda', 'prendas',
             'estilo', 'combinar', 'combinacion', 'moda', 'talla', 'tallas', 'precio', 'precios',
@@ -2231,7 +2360,6 @@ def estilista_ia_chat_view(request):
             'invierno', 'verano', 'negro', 'blanco', 'azul', 'cafe', 'verde', 'gris', 'beige', 'rojo'
         }
 
-        # Palabras dinámicas extraídas de los propios productos en MongoDB
         palabras_catalogo = set()
         for item in catalogo_resumido:
             texto_cat = f"{item['nombre']} {item['categoria']} {item['subcategoria']}".lower()
@@ -2239,7 +2367,6 @@ def estilista_ia_chat_view(request):
 
         es_sobre_tienda = bool(tokens & (palabras_moda | palabras_catalogo))
 
-        # Si no hay ninguna coincidencia con moda ni con productos del catálogo -> rechazar
         if not es_sobre_tienda:
             return JsonResponse({
                 'ok': True,
@@ -2247,7 +2374,6 @@ def estilista_ia_chat_view(request):
                 'productos': []
             })
 
-        # Detectar presupuesto si menciona un número de 3 a 5 dígitos junto a contexto de tienda
         nums = [int(n) for n in re.findall(r'\b\d{3,5}\b', mensaje_usuario)]
         max_presupuesto = max(nums) if nums else None
 

@@ -998,3 +998,240 @@
         border-collapse: collapse !important;
     }
 }
+/* ==========================================================================
+   VÉRTICE — ESTILOS DE ANALÍTICA Y GRÁFICAS DEL PANEL DE ADMINISTRACIÓN
+   ========================================================================== */
+
+.admin-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.admin-header-bar .admin-title {
+    margin-bottom: 4px;
+}
+
+.admin-subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+    letter-spacing: 0.03em;
+    margin: 0;
+}
+
+.live-sync-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: #111111;
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
+    animation: pulseLiveDot 2s infinite;
+}
+
+@keyframes pulseLiveDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.25); opacity: 0.75; }
+}
+
+/* Grid de 6 KPIs superiores */
+.kpi-grid-6 {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.stat-card-highlight {
+    background: linear-gradient(135deg, #111111 0%, #262626 100%) !important;
+    color: #ffffff !important;
+    border-color: #111111 !important;
+}
+
+.stat-card-highlight h3,
+.stat-card-highlight p,
+.stat-card-highlight ion-icon {
+    color: #ffffff !important;
+}
+
+.stat-card-warning {
+    border-left: 4px solid #f59e0b !important;
+}
+
+/* Contenedor principal de gráficas */
+.analytics-hub {
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+}
+
+.analytics-hub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.analytics-hub-header .section-title {
+    margin-bottom: 0;
+}
+
+.analytics-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.analytics-tab-btn {
+    padding: 8px 14px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #374151;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.analytics-tab-btn:hover {
+    border-color: #111111;
+    color: #111111;
+}
+
+.analytics-tab-btn.active {
+    background: #111111;
+    color: #ffffff;
+    border-color: #111111;
+}
+
+/* Diseño Bento Grid para las 7 gráficas */
+.analytics-bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.chart-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.chart-card.is-hidden {
+    display: none;
+}
+
+.chart-span-2 {
+    grid-column: span 2;
+}
+
+.chart-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.chart-eyebrow {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #9ca3af;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.chart-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111111;
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+
+.chart-badge-dark {
+    padding: 4px 10px;
+    background: #111111;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.chart-badge-outline {
+    padding: 4px 10px;
+    border: 1px solid #111111;
+    color: #111111;
+    font-size: 0.68rem;
+    font-weight: 600;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    flex: 1;
+}
+
+.chart-canvas-wrap.chart-tall {
+    height: 280px;
+}
+
+@media (max-width: 1100px) {
+    .analytics-bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .chart-span-2 {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 720px) {
+    .analytics-bento-grid {
+        grid-template-columns: 1fr;
+    }
+    .chart-span-2 {
+        grid-column: span 1;
+    }
+    .chart-canvas-wrap,
+    .chart-canvas-wrap.chart-tall {
+        height: 230px;
+    }
+}

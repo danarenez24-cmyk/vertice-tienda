@@ -7,15 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración | VÉRTICE</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=27">
     <link rel="stylesheet" href="{% static 'css/admin.css' %}?v=6">
+    <link rel="stylesheet" href="{% static 'css/admin_charts.css' %}?v=1">
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </head>
 
-<body>
+<body data-verify-ticket-url="{% url 'admin_verificar_ticket' %}">
 
     <!-- Header Panel Admin -->
     <header class="menuprincipal header-admin">
@@ -40,7 +41,13 @@
     </header>
 
     <main class="admin-container">
-        <h1 class="admin-title">PANEL DE CONTROL Y GESTIÓN</h1>
+        <div class="admin-header-bar">
+            <div>
+                <h1 class="admin-title">PANEL DE CONTROL Y GESTIÓN</h1>
+                <p class="admin-subtitle">Inteligencia comercial, inventario en vivo y operaciones de VÉRTICE</p>
+            </div>
+            <span class="live-sync-pill"><span class="live-dot"></span> MongoDB Atlas Conectado</span>
+        </div>
 
         {% if messages %}
         <div class="mensajes-contenedor">
@@ -50,37 +57,159 @@
         </div>
         {% endif %}
 
-        <!-- Tarjetas de Métricas -->
-        <div class="admin-stats-grid">
-            <div class="stat-card">
-                <ion-icon name="shirt-outline"></ion-icon>
+        <!-- Tarjetas de Métricas Ejecutivas (6 KPIs) -->
+        <div class="admin-stats-grid kpi-grid-6">
+            <div class="stat-card stat-card-highlight">
+                <ion-icon name="cash-outline"></ion-icon>
                 <div>
-                    <h3>{{ total_productos }}</h3>
-                    <p>Productos Activos</p>
+                    <h3>${{ ingresos_totales }} MXN</h3>
+                    <p>Ingresos Netos</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <div>
+                    <h3>${{ ticket_promedio }} MXN</h3>
+                    <p>Ticket Promedio</p>
                 </div>
             </div>
             <div class="stat-card">
                 <ion-icon name="bag-handle-outline"></ion-icon>
                 <div>
                     <h3>{{ total_pedidos }}</h3>
-                    <p>Pedidos Registrados</p>
+                    <p>Pedidos Totales ({{ unidades_vendidas_total }} uds.)</p>
                 </div>
             </div>
             <div class="stat-card">
-                <ion-icon name="cash-outline"></ion-icon>
+                <ion-icon name="shirt-outline"></ion-icon>
                 <div>
-                    <h3>${{ ingresos_totales }} MXN</h3>
-                    <p>Ingresos Generados</p>
+                    <h3>{{ total_productos }}</h3>
+                    <p>Prendas en Catálogo</p>
                 </div>
             </div>
             <div class="stat-card">
                 <ion-icon name="people-outline"></ion-icon>
                 <div>
                     <h3>{{ total_usuarios }}</h3>
-                    <p>Usuarios Registrados</p>
+                    <p>Clientes Registrados</p>
+                </div>
+            </div>
+            <div class="stat-card {% if stock_bajo_count > 0 %}stat-card-warning{% endif %}">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <div>
+                    <h3>{{ stock_bajo_count }}</h3>
+                    <p>Prendas con Stock Bajo (&le;5)</p>
                 </div>
             </div>
         </div>
+
+        <!-- SECCIÓN ANALÍTICA: 7 Gráficas Interactivas -->
+        <section class="admin-section-block analytics-hub">
+            <div class="analytics-hub-header">
+                <h2 class="section-title"><ion-icon name="analytics-outline"></ion-icon> INTELIGENCIA DE VENTAS Y MÉTRICAS DEL NEGOCIO</h2>
+                <div class="analytics-tabs" role="tablist">
+                    <button type="button" class="analytics-tab-btn active" data-filter="all">Vista Completa (7)</button>
+                    <button type="button" class="analytics-tab-btn" data-filter="ventas">Ventas e Ingresos</button>
+                    <button type="button" class="analytics-tab-btn" data-filter="inventario">Catálogo e Inventario</button>
+                    <button type="button" class="analytics-tab-btn" data-filter="clientes">Clientes y Operación</button>
+                </div>
+            </div>
+
+            <div class="analytics-bento-grid">
+                <!-- Gráfica 1 (Ancha): Evolución de Ingresos y Volumen de Pedidos -->
+                <article class="chart-card chart-span-2" data-group="ventas">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">RENDIMIENTO DIARIO</span>
+                            <h3 class="chart-title">Evolución de Ingresos (MXN) vs. Volumen de Pedidos</h3>
+                        </div>
+                        <span class="chart-badge-dark">Eje Dual</span>
+                    </div>
+                    <div class="chart-canvas-wrap chart-tall">
+                        <canvas id="chartVentasEvolucion"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 2: Ingresos por Categoría -->
+                <article class="chart-card" data-group="ventas">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">FACTURACIÓN POR LÍNEA</span>
+                            <h3 class="chart-title">Ingresos por Categoría (MXN)</h3>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartIngresosCategoria"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 3: Top 5 Prendas Más Vendidas -->
+                <article class="chart-card chart-span-2" data-group="ventas">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">RANKING COMERCIAL</span>
+                            <h3 class="chart-title">Top 5 Prendas Más Vendidas (Unidades)</h3>
+                        </div>
+                        <span class="chart-badge-outline">Best Sellers</span>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartTopPrendas"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 4: Demanda por Talla (Radar) -->
+                <article class="chart-card" data-group="inventario">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">CURVA DE TALLAS</span>
+                            <h3 class="chart-title">Demanda por Talla Vendida</h3>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartDemandaTallas"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 5: Stock Disponible por Categoría -->
+                <article class="chart-card" data-group="inventario">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">ALMACÉN ACTIVO</span>
+                            <h3 class="chart-title">Unidades en Stock por Colección</h3>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartStockCategoria"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 6: Estado Logístico de Pedidos -->
+                <article class="chart-card" data-group="clientes">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">LOGÍSTICA Y ENTREGAS</span>
+                            <h3 class="chart-title">Estado de Pedidos</h3>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartEstadoPedidos"></canvas>
+                    </div>
+                </article>
+
+                <!-- Gráfica 7: Top Clientes + Canales de Registro -->
+                <article class="chart-card" data-group="clientes">
+                    <div class="chart-card-head">
+                        <div>
+                            <span class="chart-eyebrow">COMUNIDAD VÉRTICE</span>
+                            <h3 class="chart-title">Canales de Registro de Usuarios</h3>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chartCanalesRegistro"></canvas>
+                    </div>
+                </article>
+            </div>
+        </section>
 
         <!-- SECCIÓN 1: Agregar Nueva Prenda -->
         <section class="admin-section-block">
@@ -153,7 +282,7 @@
             <h2 class="section-title"><ion-icon name="qr-code-outline"></ion-icon> VERIFICAR TICKET QR / ENTREGA EN TIENDA</h2>
             <div class="qr-verifier-bar">
                 <input type="text" id="inputCodigoQR" placeholder="Escanea el código QR o escribe el folio (Ej. VRT-A1B2C3)..." autocomplete="off">
-                <button type="button" class="btn-admin-submit btn-no-margin" onclick="verificarTicketAdmin()">VERIFICAR TICKET</button>
+                <button type="button" id="btnVerificarTicketQR" class="btn-admin-submit btn-no-margin">VERIFICAR TICKET</button>
             </div>
             <div id="resultadoVerificacionQR" class="qr-result-box"></div>
         </section>
@@ -245,7 +374,7 @@
                             <td>
                                 <div class="action-btns-group">
                                     <button type="button"
-                                            class="btn-edit-sm"
+                                            class="btn-edit-sm js-btn-editar-producto"
                                             title="Editar prenda"
                                             data-action="{% url 'admin_editar_producto' prod.id_str %}"
                                             data-nombre="{{ prod.nombre }}"
@@ -256,8 +385,7 @@
                                             data-tallas="{{ prod.tallas_str }}"
                                             data-stock="{% if prod.es_stock_por_talla %}{% else %}{{ prod.stock_numerico|default:'' }}{% endif %}"
                                             data-stock-talla="{% if prod.es_stock_por_talla %}1{% else %}0{% endif %}"
-                                            data-descripcion="{{ prod.descripcion|default:'' }}"
-                                            onclick="abrirModalEditarProducto(this)">
+                                            data-descripcion="{{ prod.descripcion|default:'' }}">
                                         <ion-icon name="create-outline"></ion-icon> Editar
                                     </button>
 
@@ -375,9 +503,9 @@
     </main>
 
     <!-- MODAL EDITAR PRODUCTO -->
-    <div id="modalEditarProducto" class="admin-modal-overlay" onclick="cerrarModalEditarProducto(event)">
-        <div class="admin-modal-card" onclick="event.stopPropagation()">
-            <button type="button" class="admin-modal-close" onclick="cerrarModalEditarProducto()">&times;</button>
+    <div id="modalEditarProducto" class="admin-modal-overlay">
+        <div class="admin-modal-card">
+            <button type="button" id="btnCerrarModalEditar" class="admin-modal-close">&times;</button>
             <h2 class="section-title modal-section-title"><ion-icon name="create-outline"></ion-icon> EDITAR PRENDA</h2>
 
             <form id="formEditarProducto" method="POST" enctype="multipart/form-data" class="admin-form-grid">
@@ -444,144 +572,10 @@
         </div>
     </div>
 
-    <script>
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        function inicializarDropzone(dropzoneId, inputId, thumbId, titleId, subId) {
-            const dropzone = document.getElementById(dropzoneId);
-            const input = document.getElementById(inputId);
-            const thumb = document.getElementById(thumbId);
-            const title = document.getElementById(titleId);
-            const sub = document.getElementById(subId);
-            if (!dropzone || !input) return;
-
-            ['dragenter', 'dragover'].forEach(evt => {
-                dropzone.addEventListener(evt, () => dropzone.classList.add('is-dragover'));
-            });
-            ['dragleave', 'drop'].forEach(evt => {
-                dropzone.addEventListener(evt, () => dropzone.classList.remove('is-dragover'));
-            });
-
-            input.addEventListener('change', function () {
-                const archivo = this.files && this.files[0];
-                if (!archivo) return;
-
-                dropzone.classList.add('has-file');
-                title.textContent = archivo.name;
-                sub.textContent = `${(archivo.size / 1024).toFixed(1)} KB • Lista para guardar`;
-
-                const reader = new FileReader();
-                reader.onload = (e) => { thumb.src = e.target.result; };
-                reader.readAsDataURL(archivo);
-            });
-        }
-
-        inicializarDropzone('dropzoneCrear', 'crearImagenArchivo', 'previewCrearThumb', 'dropzoneCrearTitle', 'dropzoneCrearSub');
-        inicializarDropzone('dropzoneEditar', 'editImagenArchivo', 'previewEditarThumb', 'dropzoneEditarTitle', 'dropzoneEditarSub');
-
-        function abrirModalEditarProducto(btn) {
-            const modal = document.getElementById('modalEditarProducto');
-            const form = document.getElementById('formEditarProducto');
-
-            form.action = btn.dataset.action;
-            document.getElementById('editNombre').value = btn.dataset.nombre || '';
-            document.getElementById('editCategoria').value = btn.dataset.categoria || 'el';
-            document.getElementById('editPrecio').value = btn.dataset.precio || '';
-            document.getElementById('editPrecioOriginal').value = btn.dataset.precioOriginal || '';
-            document.getElementById('editTallas').value = btn.dataset.tallas || 'S, M, L, XL';
-            document.getElementById('editImagenUrl').value = btn.dataset.imagen || '';
-            document.getElementById('editDescripcion').value = btn.dataset.descripcion || '';
-
-            // Mostrar la imagen actual como vista previa inicial en el modal
-            const dropzoneEditar = document.getElementById('dropzoneEditar');
-            const previewEditar = document.getElementById('previewEditarThumb');
-            document.getElementById('editImagenArchivo').value = '';
-            if (btn.dataset.imagen) {
-                dropzoneEditar.classList.add('has-file');
-                previewEditar.src = btn.dataset.imagen;
-                document.getElementById('dropzoneEditarTitle').textContent = 'Fotografía actual cargada';
-                document.getElementById('dropzoneEditarSub').textContent = 'Haz clic o arrastra otra imagen para reemplazarla';
-            } else {
-                dropzoneEditar.classList.remove('has-file');
-                previewEditar.src = '';
-            }
-
-            const stockWrapper = document.getElementById('editStockWrapper');
-            const stockInput = document.getElementById('editStock');
-            if (btn.dataset.stockTalla === '1') {
-                stockWrapper.style.display = 'none';
-                stockInput.value = '';
-            } else {
-                stockWrapper.style.display = '';
-                stockInput.value = btn.dataset.stock || '';
-            }
-
-            modal.classList.add('open');
-        }
-
-        function cerrarModalEditarProducto(event) {
-            if (!event || event.target.id === 'modalEditarProducto') {
-                document.getElementById('modalEditarProducto').classList.remove('open');
-            }
-        }
-
-        async function verificarTicketAdmin(marcarEntregado = false) {
-            const input = document.getElementById('inputCodigoQR');
-            const box = document.getElementById('resultadoVerificacionQR');
-            const codigo = input.value.trim();
-            if (!codigo) return;
-
-            const formData = new FormData();
-            formData.append('codigo', codigo);
-            if (marcarEntregado) formData.append('accion', 'marcar_entregado');
-
-            const resp = await fetch("{% url 'admin_verificar_ticket' %}", {
-                method: 'POST',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                body: formData
-            });
-            const data = await resp.json();
-
-            box.style.display = 'block';
-            if (!data.ok) {
-                box.innerHTML = `<p class="qr-error-msg">✕ ${data.error}</p>`;
-                return;
-            }
-
-            const p = data.pedido;
-            const esEntregado = p.estado === 'Entregado';
-            box.innerHTML = `
-                <div class="qr-verified-grid">
-                    <div>
-                        <span class="status-badge ${esEntregado ? 'status-entregado' : 'status-procesando'}">TICKET AUTÉNTICO • ${p.estado.toUpperCase()}</span>
-                        <h3 class="qr-ticket-title">${p.folio} — ${p.producto}</h3>
-                        <p class="qr-ticket-meta">Cliente: <strong>${p.cliente}</strong> | Talla: <strong>${p.talla}</strong> (x${p.cantidad}) | Total: <strong>$${p.total} MXN</strong></p>
-                    </div>
-                    ${!esEntregado ? `<button type="button" class="btn-admin-submit btn-no-margin" onclick="verificarTicketAdmin(true)">CONFIRMAR ENTREGA</button>` : `<span class="qr-delivered-label">✓ Pedido ya entregado</span>`}
-                </div>
-            `;
-        }
-
-        document.getElementById('inputCodigoQR')?.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                verificarTicketAdmin();
-            }
-        });
-    </script>
+    <!-- Datos JSON seguros de Django para JavaScript externo -->
+    <script id="vertice-analytics-data" type="application/json">{{ analytics_json|safe }}</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="{% static 'js/admin_dashboard.js' %}?v=1"></script>
 
 </body>
 
