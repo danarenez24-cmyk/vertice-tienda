@@ -9,6 +9,7 @@ import random
 import re
 import shutil
 import threading
+import urllib.request
 import uuid
 
 from bson import ObjectId
@@ -32,6 +33,40 @@ GOOGLE_CLIENT_ID = "382398764900-6otetq3jppn56hgb7ugc2amuctudt89a.apps.googleuse
 
 ENVIO_GRATIS_MINIMO = 1299.0
 COSTO_ENVIO_ESTANDAR = 149.0
+
+
+def enviar_correo_vertice(destinatario, asunto, mensaje):
+    """Envía correos vía Webhook HTTPS (Apps Script) en Render o por SMTP en local."""
+    webhook_url = os.environ.get('GMAIL_WEBHOOK_URL', '').strip()
+    if webhook_url:
+        try:
+            payload = json.dumps({
+                'to': destinatario,
+                'subject': asunto,
+                'message': mensaje
+            }).encode('utf-8')
+            req = urllib.request.Request(
+                webhook_url,
+                data=payload,
+                headers={'Content-Type': 'application/json'},
+                method='POST'
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                resp.read()
+            return
+        except Exception as webhook_err:
+            print("--> Error enviando correo vía Apps Script:", webhook_err)
+
+    try:
+        send_mail(
+            subject=asunto,
+            message=mensaje,
+            from_email='dan.are.nez.24@gmail.com',
+            recipient_list=[destinatario],
+            fail_silently=True,
+        )
+    except Exception as mail_err:
+        print("--> Error enviando correo SMTP local:", mail_err)
 
 
 def requiere_rol(roles_permitidos=['admin', 'superadmin']):
@@ -189,16 +224,11 @@ def login_view(request):
                     request.session.set_expiry(0)
 
                     def _enviar_otp_registro():
-                        try:
-                            send_mail(
-                                subject='Código de verificación - Vértice',
-                                message=f'Tu código de confirmación para crear tu cuenta es: {codigo_otp}',
-                                from_email='dan.are.nez.24@gmail.com',
-                                recipient_list=[email],
-                                fail_silently=True,
-                            )
-                        except Exception as mail_err:
-                            print("Error al enviar correo OTP:", mail_err)
+                        enviar_correo_vertice(
+                            destinatario=email,
+                            asunto='Código de verificación - Vértice',
+                            mensaje=f'Tu código de confirmación para crear tu cuenta es: {codigo_otp}'
+                        )
 
                     threading.Thread(target=_enviar_otp_registro, daemon=True).start()
 
@@ -1080,16 +1110,11 @@ def seccion_contacto(request):
             db.mensajes_contacto.insert_one(contacto_doc)
 
             def _enviar_correo_contacto():
-                try:
-                    send_mail(
-                        subject=f'Nuevo Contacto: {motivo} - {nombre}',
-                        message=f'Nombre: {nombre}\nCorreo: {email}\nTeléfono: {telefono}\nMotivo: {motivo}\n\nMensaje:\n{mensaje}',
-                        from_email='dan.are.nez.24@gmail.com',
-                        recipient_list=['dan.are.nez.24@gmail.com'],
-                        fail_silently=True,
-                    )
-                except Exception as mail_err:
-                    print("Error enviando notificación por correo:", mail_err)
+                enviar_correo_vertice(
+                    destinatario='dan.are.nez.24@gmail.com',
+                    asunto=f'Nuevo Contacto: {motivo} - {nombre}',
+                    mensaje=f'Nombre: {nombre}\nCorreo: {email}\nTeléfono: {telefono}\nMotivo: {motivo}\n\nMensaje:\n{mensaje}'
+                )
 
             threading.Thread(target=_enviar_correo_contacto, daemon=True).start()
 
@@ -1583,26 +1608,21 @@ def procesar_pago_view(request):
         request.session.modified = True
 
         def _enviar_correo_pedido():
-            try:
-                texto_envio = 'GRATIS' if resumen['envio'] == 0 else f"${resumen['envio']} MXN"
-                cuerpo_email = (
-                    f"¡Gracias por tu compra en VÉRTICE!\n\n"
-                    f"Fecha: {fecha_actual}\n"
-                    f"Método de pago: {metodo_pago}\n"
-                    f"Envío: {texto_envio}\n"
-                    f"Total pagado: ${resumen['total']} MXN\n\n"
-                    f"Resumen de prendas:\n" + "\n".join(detalle_correo) +
-                    f"\n\nPuedes consultar tu Ticket Digital QR en tu perfil dentro de la tienda."
-                )
-                send_mail(
-                    subject=f"Confirmación de Pedido VÉRTICE ({', '.join(folios_generados)})",
-                    message=cuerpo_email,
-                    from_email='dan.are.nez.24@gmail.com',
-                    recipient_list=[usuario_email],
-                    fail_silently=True,
-                )
-            except Exception as mail_err:
-                print("Error enviando confirmación de pedido:", mail_err)
+            texto_envio = 'GRATIS' if resumen['envio'] == 0 else f"${resumen['envio']} MXN"
+            cuerpo_email = (
+                f"¡Gracias por tu compra en VÉRTICE!\n\n"
+                f"Fecha: {fecha_actual}\n"
+                f"Método de pago: {metodo_pago}\n"
+                f"Envío: {texto_envio}\n"
+                f"Total pagado: ${resumen['total']} MXN\n\n"
+                f"Resumen de prendas:\n" + "\n".join(detalle_correo) +
+                f"\n\nPuedes consultar tu Ticket Digital QR en tu perfil dentro de la tienda."
+            )
+            enviar_correo_vertice(
+                destinatario=usuario_email,
+                asunto=f"Confirmación de Pedido VÉRTICE ({', '.join(folios_generados)})",
+                mensaje=cuerpo_email
+            )
 
         threading.Thread(target=_enviar_correo_pedido, daemon=True).start()
 
@@ -2139,7 +2159,6 @@ def recortar_prenda_ia_view(request, producto_id):
 
         input_bytes = None
         if ruta_raw.startswith(('http://', 'https://')):
-            import urllib.request
             req = urllib.request.Request(ruta_raw, headers={'User-Agent': 'Mozilla/5.0'})
             with urllib.request.urlopen(req, timeout=15) as resp:
                 input_bytes = resp.read()
@@ -2214,10 +2233,10 @@ def probar_prenda_generativa_view(request, producto_id):
         if os.path.exists(cutout_path):
             shutil.copy(cutout_path, garment_temp_path)
         elif img_url.startswith('http'):
-            r = requests.get(img_url, timeout=15)
-            r.raise_for_status()
-            with open(garment_temp_path, 'wb') as f:
-                f.write(r.content)
+            req = urllib.request.Request(img_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                with open(garment_temp_path, 'wb') as f:
+                    f.write(resp.read())
         else:
             rel_path = img_url.lstrip('/')
             if rel_path.startswith('static/'):
