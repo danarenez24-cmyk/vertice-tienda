@@ -417,6 +417,9 @@ def pagina_escaneo_qr(request, token):
     if not registro or registro.get('estado') != 'pendiente':
         return render(request, 'scan_mobile.html', {'error': 'Este código QR ha expirado o ya fue utilizado.'})
 
+    request.session['qr_token_pendiente'] = str(token)
+    request.session.modified = True
+
     return render(request, 'scan_mobile.html', {
         'token': token,
         'google_client_id': GOOGLE_CLIENT_ID
@@ -432,8 +435,18 @@ def aprobar_login_qr(request):
             token_qr = data.get('token_qr')
             google_jwt = data.get('google_jwt')
         else:
-            token_qr = request.GET.get('token_qr') or request.POST.get('token_qr')
+            token_qr = (
+                request.POST.get('state')
+                or request.session.pop('qr_token_pendiente', None)
+                or request.GET.get('token_qr')
+                or request.POST.get('token_qr')
+            )
             google_jwt = request.POST.get('credential')
+
+        if not token_qr:
+            return render(request, 'scan_mobile.html', {
+                'error': 'No se recibió el identificador del código QR. Escanea un código nuevo desde tu computadora.'
+            })
 
         try:
             idinfo = id_token.verify_oauth2_token(
@@ -459,8 +472,8 @@ def aprobar_login_qr(request):
                     'fecha_registro': datetime.utcnow()
                 })
 
-            db.tokens_qr.update_one(
-                {'token': token_qr},
+            resultado = db.tokens_qr.update_one(
+                {'token': token_qr, 'estado': 'pendiente'},
                 {'$set': {
                     'estado': 'aprobado',
                     'usuario': {
@@ -471,6 +484,11 @@ def aprobar_login_qr(request):
                 }}
             )
 
+            if resultado.matched_count == 0:
+                return render(request, 'scan_mobile.html', {
+                    'error': 'Este código QR ya expiró o fue usado anteriormente. Genera uno nuevo.'
+                })
+
             if es_json:
                 return JsonResponse({'status': 'ok'})
             return render(request, 'scan_mobile.html', {
@@ -480,7 +498,9 @@ def aprobar_login_qr(request):
         except Exception as e:
             if es_json:
                 return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-            return render(request, 'scan_mobile.html', {'error': 'No se pudo validar tu cuenta de Google. Intenta escanear un QR nuevo.'})
+            return render(request, 'scan_mobile.html', {
+                'error': 'No se pudo validar tu cuenta de Google. Intenta escanear un QR nuevo.'
+            })
 
     return redirect('login')
 
