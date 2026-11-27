@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil | VÉRTICE</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/perfil.css' %}?v=6">
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
@@ -43,7 +44,7 @@
                     </a>
                 </li>
                 {% endif %}
-                
+
                 <li class="nav-item">
                     <button class="nav-button" onclick="openTab(event, 'tab-pedidos')">
                         01 | MIS PEDIDOS
@@ -92,35 +93,33 @@
                 <h2 class="section-title">MIS PEDIDOS Y TICKETS DIGITALES</h2>
 
                 {% if pedidos %}
-                <div class="orders-container" id="ordersContainer" data-estados-url="{% url 'estado_pedidos_usuario_json' %}">
+                <div class="orders-container" id="ordersContainer"
+                    data-estados-url="{% url 'estado_pedidos_usuario_json' %}">
                     {% for pedido in pedidos %}
                     <div class="order-card" data-pedido-id="{{ pedido.id_str }}">
                         <div class="order-details">
-                            <img src="{{ pedido.producto_imagen }}" alt="{{ pedido.producto_nombre }}" class="order-img">
+                            <img src="{{ pedido.producto_imagen }}" alt="{{ pedido.producto_nombre }}"
+                                class="order-img">
                             <div>
                                 <span class="order-folio-tag">FOLIO: #{{ pedido.folio }}</span>
                                 <h3>{{ pedido.producto_nombre }}</h3>
-                                <p>Talla: <strong>{{ pedido.talla }}</strong> | Cantidad: <strong>{{ pedido.cantidad }}</strong></p>
+                                <p>Talla: <strong>{{ pedido.talla }}</strong> | Cantidad: <strong>{{ pedido.cantidad
+                                        }}</strong></p>
                                 <p class="order-date">Fecha: {{ pedido.fecha }}</p>
                             </div>
                         </div>
                         <div class="order-summary">
                             <span class="order-total">${{ pedido.total }} MXN</span>
-                            <span class="status-badge status-{{ pedido.estado|default:'procesando'|lower }}" data-status-pedido="{{ pedido.id_str }}">
+                            <span class="status-badge status-{{ pedido.estado|default:'procesando'|lower }}"
+                                data-status-pedido="{{ pedido.id_str }}">
                                 {{ pedido.estado|default:"Procesando" }}
                             </span>
-                            <button type="button"
-                                    class="btn-ticket-qr"
-                                    data-pedido-id="{{ pedido.id_str }}"
-                                    data-folio="{{ pedido.folio }}"
-                                    data-producto="{{ pedido.producto_nombre }}"
-                                    data-talla="{{ pedido.talla }}"
-                                    data-cantidad="{{ pedido.cantidad }}"
-                                    data-total="{{ pedido.total }}"
-                                    data-fecha="{{ pedido.fecha }}"
-                                    data-estado="{{ pedido.estado|default:'Procesando' }}"
-                                    data-qr-url="{% url 'generar_qr_pedido' pedido.id_str %}"
-                                    onclick="abrirTicketQR(this)">
+                            <button type="button" class="btn-ticket-qr" data-pedido-id="{{ pedido.id_str }}"
+                                data-folio="{{ pedido.folio }}" data-producto="{{ pedido.producto_nombre }}"
+                                data-talla="{{ pedido.talla }}" data-cantidad="{{ pedido.cantidad }}"
+                                data-total="{{ pedido.total }}" data-fecha="{{ pedido.fecha }}"
+                                data-estado="{{ pedido.estado|default:'Procesando' }}"
+                                data-qr-url="{% url 'generar_qr_pedido' pedido.id_str %}" onclick="abrirTicketQR(this)">
                                 <ion-icon name="qr-code-outline"></ion-icon> VER TICKET QR
                             </button>
                         </div>
@@ -164,22 +163,27 @@
             </div>
 
             <!-- 03 | SEGURIDAD -->
-            <div id="tab-seguridad" class="tab-content">
-                <h2 class="section-title">CAMBIAR CONTRASEÑA</h2>
+            <h3>{% if tiene_password %}CAMBIAR CONTRASEÑA{% else %}CREAR CONTRASEÑA{% endif %}</h3>
 
-                <form action="{% url 'cambiar_password' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label>Contraseña Actual</label>
-                        <input type="password" name="pass_actual" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Nueva Contraseña (mínimo 8 caracteres)</label>
-                        <input type="password" name="pass_nueva" required minlength="8">
-                    </div>
-                    <button type="submit" class="btn-save">ACTUALIZAR CONTRASEÑA</button>
-                </form>
-            </div>
+            <form method="POST" action="{% url 'cambiar_password' %}">
+                {% csrf_token %}
+
+                {% if tiene_password %}
+                <div class="form-group">
+                    <label>CONTRASEÑA ACTUAL</label>
+                    <input type="password" name="pass_actual" required>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label>NUEVA CONTRASEÑA (MÍNIMO 8 CARACTERES)</label>
+                    <input type="password" name="pass_nueva" minlength="8" required>
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    {% if tiene_password %}ACTUALIZAR CONTRASEÑA{% else %}GUARDAR CONTRASEÑA{% endif %}
+                </button>
+            </form>
 
             <!-- 04 | METODOS DE PAGO -->
             <div id="tab-metodos-pago" class="tab-content active">
@@ -195,12 +199,17 @@
                                 <span class="card-last4">•••• {{ tarjeta.ultimos_4 }}</span>
                             </div>
 
-                            <form action="{% url 'eliminar_tarjeta' tarjeta.id_str %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta tarjeta?');" class="delete-form">
+                            <form action="{% url 'eliminar_tarjeta' tarjeta.id_str %}" method="POST"
+                                onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta tarjeta?');"
+                                class="delete-form">
                                 {% csrf_token %}
                                 <button type="submit" class="btn-delete-card" title="Eliminar tarjeta">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="3 6 5 6 21 6"></polyline>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
                                         <line x1="10" y1="11" x2="10" y2="17"></line>
                                         <line x1="14" y1="11" x2="14" y2="17"></line>
                                     </svg>
@@ -215,7 +224,8 @@
                 </div>
                 {% else %}
                 <div class="empty-orders">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
                         <line x1="2" y1="10" x2="22" y2="10"></line>
                     </svg>
@@ -268,25 +278,29 @@
 
                         <div class="form-group">
                             <label for="numero_tarjeta">Número de Tarjeta</label>
-                            <input type="text" id="numero_tarjeta" name="numero_tarjeta" placeholder="1234 5678 9101 1121" maxlength="19" required autocomplete="off">
+                            <input type="text" id="numero_tarjeta" name="numero_tarjeta"
+                                placeholder="1234 5678 9101 1121" maxlength="19" required autocomplete="off">
                             <small class="field-error" id="error-numero"></small>
                         </div>
 
                         <div class="form-group">
                             <label for="titular">Nombre del Titular</label>
-                            <input type="text" id="titular" name="titular" placeholder="EJ. DANIEL ARELLANO" required autocomplete="off" class="text-uppercase">
+                            <input type="text" id="titular" name="titular" placeholder="EJ. DANIEL ARELLANO" required
+                                autocomplete="off" class="text-uppercase">
                             <small class="field-error" id="error-titular"></small>
                         </div>
 
                         <div class="form-grid-2">
                             <div class="form-group">
                                 <label for="expiracion">Vencimiento (MM/AA)</label>
-                                <input type="text" id="expiracion" name="expiracion" placeholder="MM/AA" maxlength="5" required autocomplete="off">
+                                <input type="text" id="expiracion" name="expiracion" placeholder="MM/AA" maxlength="5"
+                                    required autocomplete="off">
                                 <small class="field-error" id="error-expiracion"></small>
                             </div>
                             <div class="form-group">
                                 <label for="cvv">CVV</label>
-                                <input type="password" id="cvv" name="cvv" placeholder="123" maxlength="4" required autocomplete="off">
+                                <input type="password" id="cvv" name="cvv" placeholder="123" maxlength="4" required
+                                    autocomplete="off">
                                 <small class="field-error" id="error-cvv"></small>
                             </div>
                         </div>
@@ -305,12 +319,9 @@
                     {% for prod in productos_favoritos %}
                     <article class="fav-card" data-producto-id="{{ prod.id_str }}">
                         <div class="fav-img-box">
-                            <button type="button"
-                                    class="btn-remove-fav"
-                                    title="Quitar de favoritos"
-                                    data-producto-id="{{ prod.id_str }}"
-                                    data-url="{% url 'toggle_favorito' %}"
-                                    onclick="quitarFavoritoPerfil(this)">
+                            <button type="button" class="btn-remove-fav" title="Quitar de favoritos"
+                                data-producto-id="{{ prod.id_str }}" data-url="{% url 'toggle_favorito' %}"
+                                onclick="quitarFavoritoPerfil(this)">
                                 <ion-icon name="heart"></ion-icon>
                             </button>
 
@@ -319,10 +330,9 @@
                             {% endif %}
 
                             <a href="{% url 'detalle_producto' prod.id_str %}" class="fav-link">
-                                <img src="{{ prod.imagen }}"
-                                     data-fallback="{% static 'media/logo1.png' %}"
-                                     alt="{{ prod.nombre }}"
-                                     onerror="this.onerror=null; this.src=this.dataset.fallback; this.classList.add('img-fallback');">
+                                <img src="{{ prod.imagen }}" data-fallback="{% static 'media/logo1.png' %}"
+                                    alt="{{ prod.nombre }}"
+                                    onerror="this.onerror=null; this.src=this.dataset.fallback; this.classList.add('img-fallback');">
                             </a>
                         </div>
 
@@ -343,14 +353,19 @@
                             {% else %}
                             <div class="fav-sizes">
                                 {% if prod.tallas %}
-                                    {% for talla in prod.tallas %}
-                                    <button type="button" class="fav-size-btn {% if forloop.first %}selected{% endif %}" onclick="seleccionarTallaFav(this, '{{ talla }}')">{{ talla }}</button>
-                                    {% endfor %}
+                                {% for talla in prod.tallas %}
+                                <button type="button" class="fav-size-btn {% if forloop.first %}selected{% endif %}"
+                                    onclick="seleccionarTallaFav(this, '{{ talla }}')">{{ talla }}</button>
+                                {% endfor %}
                                 {% else %}
-                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'S')">S</button>
-                                    <button type="button" class="fav-size-btn selected" onclick="seleccionarTallaFav(this, 'M')">M</button>
-                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'L')">L</button>
-                                    <button type="button" class="fav-size-btn" onclick="seleccionarTallaFav(this, 'XL')">XL</button>
+                                <button type="button" class="fav-size-btn"
+                                    onclick="seleccionarTallaFav(this, 'S')">S</button>
+                                <button type="button" class="fav-size-btn selected"
+                                    onclick="seleccionarTallaFav(this, 'M')">M</button>
+                                <button type="button" class="fav-size-btn"
+                                    onclick="seleccionarTallaFav(this, 'L')">L</button>
+                                <button type="button" class="fav-size-btn"
+                                    onclick="seleccionarTallaFav(this, 'XL')">XL</button>
                                 {% endif %}
                             </div>
 
@@ -395,7 +410,8 @@
                 <div class="ticket-divider"></div>
 
                 <div class="ticket-meta">
-                    <div><span>CLIENTE:</span> <strong id="tkCliente">{{ usuario.nombre }} {{ usuario.apellidos }}</strong></div>
+                    <div><span>CLIENTE:</span> <strong id="tkCliente">{{ usuario.nombre }} {{ usuario.apellidos
+                            }}</strong></div>
                     <div><span>CORREO:</span> <strong id="tkEmail">{{ usuario.email }}</strong></div>
                     <div><span>FECHA:</span> <strong id="tkFecha">--/--/----</strong></div>
                     <div><span>ESTADO:</span> <strong id="tkEstado">PROCESANDO</strong></div>

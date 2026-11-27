@@ -139,7 +139,7 @@ def login_view(request):
             if usuario_existente:
                 password_guardada = usuario_existente.get('password', '')
 
-                if check_password(password, password_guardada):
+                if password_guardada and check_password(password, password_guardada):
                     rol_usuario = usuario_existente.get('rol', 'cliente')
 
                     request.session.flush()
@@ -156,7 +156,10 @@ def login_view(request):
 
                     return redirect('inicio')
                 else:
-                    error = "La contraseña ingresada es incorrecta."
+                    if not password_guardada:
+                        error = "Esta cuenta se registró con Google o QR. Inicia sesión con esos botones o crea una contraseña en tu perfil."
+                    else:
+                        error = "La contraseña ingresada es incorrecta."
                     return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
 
             else:
@@ -868,6 +871,7 @@ def perfil_view(request):
 
     contexto = {
         'usuario': usuario,
+        'tiene_password': bool(usuario.get('password')),
         'pedidos': pedidos,
         'tarjetas': tarjetas,
         'productos_favoritos': productos_favoritos
@@ -924,14 +928,18 @@ def cambiar_password_view(request):
         pass_nueva = request.POST.get('pass_nueva', '')
 
         usuario = db.usuarios.find_one({'email': email_sesion})
+        if not usuario:
+            return redirect('login')
 
-        if usuario and check_password(pass_actual, usuario.get('password', '')):
+        password_guardada = usuario.get('password', '')
+
+        if not password_guardada or check_password(pass_actual, password_guardada):
             if len(pass_nueva) >= 8:
                 db.usuarios.update_one(
                     {'email': email_sesion},
                     {'$set': {'password': make_password(pass_nueva)}}
                 )
-                messages.success(request, '¡Tu contraseña ha sido actualizada correctamente!')
+                messages.success(request, '¡Tu contraseña ha sido guardada correctamente!')
             else:
                 messages.error(request, 'La nueva contraseña debe tener al menos 8 caracteres.')
         else:
@@ -1656,7 +1664,6 @@ def admin_dashboard_view(request):
     productos_lista = list(db.Productos.find({}).sort('_id', -1))
     usuarios_todos = list(db.usuarios.find({}))
 
-    # Mapa rápido de productos para cruzar categorías en las ventas
     mapa_prod_cat = {}
     for p in productos_lista:
         pid = str(p['_id'])
@@ -1670,7 +1677,6 @@ def admin_dashboard_view(request):
         p['es_stock_por_talla'] = isinstance(p.get('stock'), dict)
         mapa_prod_cat[pid] = str(p.get('categoria', 'otros')).lower()
 
-    # Cálculos de analítica financiera y operativa
     nombres_cat = {'el': 'ÉL', 'ella': 'ELLA', 'niños': 'NIÑOS', 'fin_año': 'FIN DE AÑO'}
     ingresos_totales = 0.0
     pedidos_validos = 0
@@ -1728,14 +1734,12 @@ def admin_dashboard_view(request):
     ingresos_totales = round(ingresos_totales, 2)
     ticket_promedio = round(ingresos_totales / pedidos_validos, 2) if pedidos_validos > 0 else 0.0
 
-    # 1. Serie temporal: Ingresos (MXN) y Volumen de Pedidos por día (últimos 10 días con movimiento)
     dias_ordenados = list(reversed(list(ingresos_por_dia.keys())))[-10:]
     if not dias_ordenados:
         dias_ordenados = ['Sin registros']
     serie_ingresos = [round(ingresos_por_dia[d], 2) for d in dias_ordenados]
     serie_pedidos_dia = [pedidos_por_dia[d] for d in dias_ordenados]
 
-    # 2. Ingresos generados por categoría (MXN)
     if ingresos_por_categoria:
         cat_ing_labels = list(ingresos_por_categoria.keys())
         cat_ing_values = [round(ingresos_por_categoria[k], 2) for k in cat_ing_labels]
@@ -1743,7 +1747,6 @@ def admin_dashboard_view(request):
         cat_ing_labels = ['ÉL', 'ELLA', 'NIÑOS', 'FIN DE AÑO']
         cat_ing_values = [0, 0, 0, 0]
 
-    # 3. Inventario: Stock disponible por categoría + alertas de stock bajo (< 5 uds)
     stock_por_cat = defaultdict(int)
     stock_bajo_items = []
     for prod in productos_lista:
@@ -1757,7 +1760,6 @@ def admin_dashboard_view(request):
     inv_cat_labels = list(stock_por_cat.keys()) or ['Sin stock']
     inv_cat_values = [stock_por_cat[k] for k in inv_cat_labels]
 
-    # 4. Demanda por Talla (S, M, L, XL, etc.)
     orden_tallas = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'ÚNICA']
     tallas_presentes = [t for t in orden_tallas if ventas_por_talla[t] > 0]
     for t in ventas_por_talla:
@@ -1766,18 +1768,15 @@ def admin_dashboard_view(request):
     tallas_labels = tallas_presentes or ['S', 'M', 'L', 'XL']
     tallas_values = [ventas_por_talla[t] for t in tallas_labels]
 
-    # 5. Estado de Pedidos
     estados_orden = ['Procesando', 'Enviado', 'Entregado', 'Cancelado']
     est_labels = estados_orden
     est_values = [estados_count.get(e, 0) for e in estados_orden]
 
-    # 6. Top 5 Prendas Más Vendidas (unidades e ingresos)
     top_prendas = unidades_por_prenda.most_common(5)
     top_labels = [t[0][:22] + ('…' if len(t[0]) > 22 else '') for t in top_prendas] or ['Sin ventas']
     top_unidades = [t[1] for t in top_prendas] or [0]
     top_ingresos = [round(ingresos_por_prenda[t[0]], 2) for t in top_prendas] or [0]
 
-    # 7. Canales de Registro de Usuarios (Web / Google / QR)
     metodos_reg_map = {
         'google_web': 'Google OAuth',
         'qr_google': 'Escaneo QR',
@@ -1789,7 +1788,6 @@ def admin_dashboard_view(request):
     reg_labels = list(reg_counter.keys()) or ['Correo y Contraseña']
     reg_values = list(reg_counter.values()) or [0]
 
-    # 8. Top 5 Clientes por monto comprado
     top_clientes_raw = sorted(gasto_por_cliente.items(), key=lambda x: x[1], reverse=True)[:5]
     clientes_labels = [c[0].split('@')[0] for c in top_clientes_raw] or ['Sin clientes']
     clientes_values = [round(c[1], 2) for c in top_clientes_raw] or [0]
