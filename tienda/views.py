@@ -120,76 +120,67 @@ def login_view(request):
     paso = request.POST.get('paso', '1')
 
     if request.method == 'POST':
+        try:
+            if paso == '1':
+                email = request.POST.get('email', '').strip().lower()
+                password = request.POST.get('password', '')
 
-        if paso == '1':
-            email = request.POST.get('email', '').strip().lower()
-            password = request.POST.get('password', '')
-
-            patron_email = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-            if not re.match(patron_email, email):
-                error = "Ingresa un correo válido con formato usuario@dominio.com"
-                return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-
-            try:
-                usuario_existente = db.usuarios.find_one({'email': email})
-            except Exception as mongo_err:
-                print("--> ERROR MONGO DB:", mongo_err)
-                error = "Error al conectar con MongoDB. Asegúrate de que el servicio de MongoDB esté activo."
-                return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-
-            if usuario_existente:
-                password_guardada = usuario_existente.get('password', '')
-
-                if password_guardada and check_password(password, password_guardada):
-                    rol_usuario = usuario_existente.get('rol', 'cliente')
-
-                    request.session.flush()
-                    request.session['usuario_email'] = usuario_existente.get('email')
-                    request.session['usuario_nombre'] = usuario_existente.get('nombre', 'Usuario')
-                    request.session['usuario_rol'] = rol_usuario
-                    request.session.modified = True
-
-                    nombre = usuario_existente.get('nombre', '')
-                    messages.success(request, f'¡Bienvenido de nuevo, {nombre}!' if nombre else '¡Sesión iniciada con éxito!')
-
-                    if rol_usuario in ['admin', 'superadmin']:
-                        return redirect('admin_dashboard')
-
-                    return redirect('inicio')
-                else:
-                    if not password_guardada:
-                        error = "Esta cuenta se registró con Google o QR. Inicia sesión con esos botones o crea una contraseña en tu perfil."
-                    else:
-                        error = "La contraseña ingresada es incorrecta."
+                patron_email = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+                if not re.match(patron_email, email):
+                    error = "Ingresa un correo válido con formato usuario@dominio.com"
                     return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-
-            else:
-                if len(password) < 8:
-                    error = "La contraseña debe tener al menos 8 caracteres."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-                if not re.search(r'[A-Z]', password):
-                    error = "La contraseña debe tener al menos una mayúscula."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-                if not re.search(r'[a-z]', password):
-                    error = "La contraseña debe tener al menos una minúscula."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-                if not re.search(r'[0-9]', password):
-                    error = "La contraseña debe contener números."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-                if not re.search(r'[!@#$%&*()_+\-=\/{};:\'",.<>/\\]', password):
-                    error = "La contraseña debe tener al menos un carácter especial."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
-
-                codigo_otp = str(random.randint(100000, 999999))
 
                 try:
-                    send_mail(
-                        subject='Código de verificación - Vértice',
-                        message=f'Tu código de confirmación para crear tu cuenta es: {codigo_otp}',
-                        from_email='dan.are.nez.24@gmail.com',
-                        recipient_list=[email],
-                        fail_silently=False,
-                    )
+                    usuario_existente = db.usuarios.find_one({'email': email})
+                except Exception as mongo_err:
+                    print("--> ERROR MONGO DB:", mongo_err)
+                    error = "Error al conectar con MongoDB. Verifica la conexión a la base de datos."
+                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+
+                if usuario_existente:
+                    password_guardada = usuario_existente.get('password') or ''
+
+                    if password_guardada and check_password(password, password_guardada):
+                        rol_usuario = usuario_existente.get('rol', 'cliente')
+
+                        request.session.flush()
+                        request.session['usuario_email'] = usuario_existente.get('email')
+                        request.session['usuario_nombre'] = usuario_existente.get('nombre', 'Usuario')
+                        request.session['usuario_rol'] = rol_usuario
+                        request.session.modified = True
+
+                        nombre = usuario_existente.get('nombre', '')
+                        messages.success(request, f'¡Bienvenido de nuevo, {nombre}!' if nombre else '¡Sesión iniciada con éxito!')
+
+                        if rol_usuario in ['admin', 'superadmin']:
+                            return redirect('admin_dashboard')
+
+                        return redirect('inicio')
+                    else:
+                        if not password_guardada:
+                            error = "Esta cuenta se registró con Google o QR. Inicia sesión con esos botones o crea una contraseña en tu perfil."
+                        else:
+                            error = "La contraseña ingresada es incorrecta."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+
+                else:
+                    if len(password) < 8:
+                        error = "La contraseña debe tener al menos 8 caracteres."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+                    if not re.search(r'[A-Z]', password):
+                        error = "La contraseña debe tener al menos una mayúscula."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+                    if not re.search(r'[a-z]', password):
+                        error = "La contraseña debe tener al menos una minúscula."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+                    if not re.search(r'[0-9]', password):
+                        error = "La contraseña debe contener números."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+                    if not re.search(r'[!@#$%&*()_+\-=\/{};:\'",.<>/\\]', password):
+                        error = "La contraseña debe tener al menos un carácter especial."
+                        return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+
+                    codigo_otp = str(random.randint(100000, 999999))
 
                     request.session['temp_email'] = email
                     request.session['temp_password'] = password
@@ -197,66 +188,81 @@ def login_view(request):
                     request.session.modified = True
                     request.session.set_expiry(0)
 
+                    def _enviar_otp_registro():
+                        try:
+                            send_mail(
+                                subject='Código de verificación - Vértice',
+                                message=f'Tu código de confirmación para crear tu cuenta es: {codigo_otp}',
+                                from_email='dan.are.nez.24@gmail.com',
+                                recipient_list=[email],
+                                fail_silently=True,
+                            )
+                        except Exception as mail_err:
+                            print("Error al enviar correo OTP:", mail_err)
+
+                    threading.Thread(target=_enviar_otp_registro, daemon=True).start()
+
                     return render(request, 'login.html', {'paso': 2, 'email': email})
 
-                except Exception as e:
-                    print("Error al enviar correo:", e)
-                    error = "No se pudo enviar el correo de verificación. Revisa la configuración de envío de correo."
-                    return render(request, 'login.html', {'error': error, 'email': email, 'paso': 1})
+            elif paso == '2':
+                codigo_ingresado = str(request.POST.get('codigo', '')).strip()
+                codigo_guardado = str(request.session.get('codigo_otp', '')).strip()
+                email = request.POST.get('email', '').strip() or request.session.get('temp_email')
 
-        elif paso == '2':
-            codigo_ingresado = str(request.POST.get('codigo', '')).strip()
-            codigo_guardado = str(request.session.get('codigo_otp', '')).strip()
-            email = request.POST.get('email', '').strip() or request.session.get('temp_email')
-
-            if codigo_ingresado and codigo_guardado and codigo_ingresado == codigo_guardado:
-                return render(request, 'login.html', {'paso': 3, 'email': email})
-            else:
-                if not codigo_guardado:
-                    error = "La sesión expiró o se perdió el código OTP. Por favor intenta registrarte de nuevo."
+                if codigo_ingresado and codigo_guardado and codigo_ingresado == codigo_guardado:
+                    return render(request, 'login.html', {'paso': 3, 'email': email})
                 else:
-                    error = "El código de verificación es incorrecto. Inténtalo de nuevo."
+                    if not codigo_guardado:
+                        error = "La sesión expiró o se perdió el código OTP. Por favor intenta registrarte de nuevo."
+                    else:
+                        error = "El código de verificación es incorrecto. Inténtalo de nuevo."
 
-                return render(request, 'login.html', {'error': error, 'paso': 2, 'email': email})
+                    return render(request, 'login.html', {'error': error, 'paso': 2, 'email': email})
 
-        elif paso == '3':
-            nombre = request.POST.get('nombre', '').strip()
-            apellidos = request.POST.get('apellidos', '').strip()
-            email = request.session.get('temp_email') or request.POST.get('email', '').strip()
-            password = request.session.get('temp_password')
+            elif paso == '3':
+                nombre = request.POST.get('nombre', '').strip()
+                apellidos = request.POST.get('apellidos', '').strip()
+                email = request.session.get('temp_email') or request.POST.get('email', '').strip()
+                password = request.session.get('temp_password')
 
-            if email and password and nombre and apellidos:
-                password_encriptada = make_password(password)
+                if email and password and nombre and apellidos:
+                    password_encriptada = make_password(password)
 
-                try:
-                    db.usuarios.insert_one({
+                    try:
+                        db.usuarios.insert_one({
+                            'email': email,
+                            'password': password_encriptada,
+                            'nombre': nombre,
+                            'apellidos': apellidos,
+                            'rol': 'cliente',
+                            'fecha_registro': datetime.utcnow()
+                        })
+                    except Exception as mongo_err:
+                        print("--> ERROR AL INSERTAR USUARIO EN MONGO:", mongo_err)
+                        error = "Error al guardar el usuario en la base de datos."
+                        return render(request, 'login.html', {'paso': 3, 'email': email, 'error': error})
+
+                    request.session.flush()
+                    request.session['usuario_email'] = email
+                    request.session['usuario_nombre'] = nombre
+                    request.session['usuario_rol'] = 'cliente'
+                    request.session.modified = True
+
+                    messages.success(request, f'¡Bienvenido {nombre}! Tu cuenta se ha registrado con éxito.')
+                    return redirect('inicio')
+                else:
+                    error = "Por favor completa todos los campos."
+                    return render(request, 'login.html', {
+                        'paso': 3,
                         'email': email,
-                        'password': password_encriptada,
-                        'nombre': nombre,
-                        'apellidos': apellidos,
-                        'rol': 'cliente',
-                        'fecha_registro': datetime.utcnow()
+                        'error': error
                     })
-                except Exception as mongo_err:
-                    print("--> ERROR AL INSERTAR USUARIO EN MONGO:", mongo_err)
-                    error = "Error al guardar el usuario en la base de datos."
-                    return render(request, 'login.html', {'paso': 3, 'email': email, 'error': error})
-
-                request.session.flush()
-                request.session['usuario_email'] = email
-                request.session['usuario_nombre'] = nombre
-                request.session['usuario_rol'] = 'cliente'
-                request.session.modified = True
-
-                messages.success(request, f'¡Bienvenido {nombre}! Tu cuenta se ha registrado con éxito.')
-                return redirect('inicio')
-            else:
-                error = "Por favor completa todos los campos."
-                return render(request, 'login.html', {
-                    'paso': 3,
-                    'email': email,
-                    'error': error
-                })
+        except Exception as e:
+            print("--> ERROR GENERAL EN LOGIN_VIEW:", e)
+            return render(request, 'login.html', {
+                'paso': 1,
+                'error': 'Ocurrió un error al procesar tu solicitud. Intenta de nuevo.'
+            })
 
     return render(request, 'login.html', {'paso': 1})
 
